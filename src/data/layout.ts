@@ -12,8 +12,8 @@ export const W = 1000
 export const H = 880
 const TOP = 150
 const BOTTOM = H - 110
-const LEFT = 90
-const RIGHT = W - 90
+const LEFT = 160
+const RIGHT = W - 160
 
 export const PHONE_ID = 'hub-phone'
 export const ADDR_ID = 'hub-address'
@@ -37,11 +37,11 @@ const rng = mulberry32(SEED + 5)
 const nodesA: N[] = BUSINESSES.map((b) => {
   const a = rng() * Math.PI * 2
   const rr = 120 + rng() * 260
-  return { id: b.id, rad: 46, x: W / 2 + Math.cos(a) * rr * 1.2, y: (TOP + BOTTOM) / 2 + Math.sin(a) * rr * 0.85 }
+  return { id: b.id, rad: 34, x: W / 2 + Math.cos(a) * rr * 1.2, y: (TOP + BOTTOM) / 2 + Math.sin(a) * rr * 0.85 }
 })
 
 const simA = forceSimulation<N>(nodesA)
-  .force('charge', forceManyBody<N>().strength(-650))
+  .force('charge', forceManyBody<N>().strength(-380))
   .force('collide', forceCollide<N>((n) => n.rad + 18).strength(1))
   .force('x', forceX<N>(W / 2).strength(0.03))
   .force('y', forceY<N>((TOP + BOTTOM) / 2).strength(0.05))
@@ -82,7 +82,7 @@ const nodesB: N[] = nodesA.map((n) => {
   const slot = SLOTS[n.id]
   return slot
     ? { id: n.id, rad: 40, x: slot.x, y: slot.y, fx: slot.x, fy: slot.y }
-    : { id: n.id, rad: 46, x: n.x, y: n.y, hx: n.x, hy: n.y }
+    : { id: n.id, rad: 34, x: n.x, y: n.y, hx: n.x, hy: n.y }
 })
 for (const id of [PHONE_ID, ADDR_ID]) nodesB.push({ id, rad: 60, x: HUBS[id].x, y: HUBS[id].y, fx: HUBS[id].x, fy: HUBS[id].y })
 

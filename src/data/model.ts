@@ -17,6 +17,16 @@ export type Category =
   | 'optician'
   | 'school'
   | 'petshop'
+  | 'butcher'
+  | 'gym'
+  | 'snack'
+  | 'dental'
+  | 'construction'
+  | 'salon'
+  | 'fuel'
+  | 'electronics'
+  | 'beverage'
+  | 'realestate'
   | 'ring'
 
 export type FactorKey = 'volume' | 'payers' | 'kickoff' | 'passthrough'
@@ -53,6 +63,10 @@ export interface Business {
   networkPts: number
   /** Shares a partner (QSA) with other ring members */
   partner: boolean
+  /** Legitimate match-day demand (e.g. drinks distributor) */
+  matchday?: boolean
+  /** Analyst note on an existing case */
+  note?: string
 }
 
 type Raw = Omit<Business, 'cnpj' | 'account'>
@@ -139,6 +153,109 @@ const RAW: Raw[] = [
     inflow30d: 236_000, payers30d: 1_900, fwd10: 0.05, firstTime: 0.37, peerPix: 84,
     peerFwd: 0.05, medianTicket: 72, factors: { volume: 9, payers: 8, kickoff: 3, passthrough: 4 },
     networkPts: 0, partner: false,
+  },
+  {
+    id: 'drogapopular', name: 'Drogaria Popular Centro LTDA', short: 'Drogaria Popular Centro',
+    cnae: '4771-7/01', activity: 'Pharmacy', city: 'Ribeirão Preto – SP', opened: '11 Apr 2013',
+    staff: 10, capital: 200_000, category: 'pharmacy', ring: false,
+    hourCalm: 3_100, hourSurge: 3_300, pix24h: 640, payers24h: 590, amount24h: 27_900,
+    inflow30d: 812_000, payers30d: 8_100, fwd10: 0.03, firstTime: 0.21, peerPix: 720,
+    peerFwd: 0.04, medianTicket: 36.9, factors: { volume: 3, payers: 3, kickoff: 0, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'boigordo', name: 'Açougue e Mercearia Boi Gordo ME', short: 'Açougue Boi Gordo',
+    cnae: '4722-9/01', activity: 'Butcher shop', city: 'Guarulhos – SP', opened: '03 Mar 2016',
+    staff: 5, capital: 50_000, category: 'butcher', ring: false,
+    hourCalm: 1_800, hourSurge: 2_100, pix24h: 310, payers24h: 280, amount24h: 24_600,
+    inflow30d: 690_000, payers30d: 4_200, fwd10: 0.03, firstTime: 0.22, peerPix: 290,
+    peerFwd: 0.04, medianTicket: 79, factors: { volume: 4, payers: 3, kickoff: 0, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'corpoemforma', name: 'Academia Corpo em Forma LTDA', short: 'Academia Corpo em Forma',
+    cnae: '9313-1/00', activity: 'Fitness centre', city: 'Jundiaí – SP', opened: '18 Jan 2018',
+    staff: 14, capital: 180_000, category: 'gym', ring: false,
+    hourCalm: 900, hourSurge: 700, pix24h: 52, payers24h: 50, amount24h: 6_900,
+    inflow30d: 214_000, payers30d: 1_120, fwd10: 0.02, firstTime: 0.08, peerPix: 45,
+    peerFwd: 0.04, medianTicket: 129, factors: { volume: 3, payers: 2, kickoff: 0, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'esquinasabor', name: 'Lanchonete Esquina do Sabor ME', short: 'Lanchonete Esquina do Sabor',
+    cnae: '5611-2/03', activity: 'Snack bar', city: 'São Paulo – SP', opened: '07 Jul 2019',
+    staff: 4, capital: 25_000, category: 'snack', ring: false,
+    hourCalm: 1_200, hourSurge: 1_600, pix24h: 420, payers24h: 380, amount24h: 9_800,
+    inflow30d: 268_000, payers30d: 5_600, fwd10: 0.02, firstTime: 0.35, peerPix: 380,
+    peerFwd: 0.03, medianTicket: 21.5, factors: { volume: 5, payers: 6, kickoff: 4, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'sorrisopleno', name: 'Clínica Odontológica Sorriso Pleno LTDA', short: 'Sorriso Pleno Odontologia',
+    cnae: '8630-5/04', activity: 'Dental clinic', city: 'Santos – SP', opened: '22 Sep 2015',
+    staff: 9, capital: 150_000, category: 'dental', ring: false,
+    hourCalm: 2_200, hourSurge: 600, pix24h: 28, payers24h: 27, amount24h: 14_200,
+    inflow30d: 388_000, payers30d: 610, fwd10: 0.03, firstTime: 0.4, peerPix: 24,
+    peerFwd: 0.04, medianTicket: 380, factors: { volume: 5, payers: 4, kickoff: 0, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'alicerce', name: 'Material de Construção Alicerce LTDA', short: 'Alicerce Materiais',
+    cnae: '4744-0/99', activity: 'Building supplies', city: 'Mogi das Cruzes – SP', opened: '14 May 2010',
+    staff: 22, capital: 400_000, category: 'construction', ring: false,
+    hourCalm: 5_600, hourSurge: 4_900, pix24h: 210, payers24h: 190, amount24h: 61_300,
+    inflow30d: 1_540_000, payers30d: 3_900, fwd10: 0.05, firstTime: 0.3, peerPix: 190,
+    peerFwd: 0.05, medianTicket: 186, factors: { volume: 4, payers: 3, kickoff: 0, passthrough: 2 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'belezapura', name: 'Salão Beleza Pura ME', short: 'Salão Beleza Pura',
+    cnae: '9602-5/01', activity: 'Hair salon', city: 'Osasco – SP', opened: '30 Oct 2017',
+    staff: 6, capital: 30_000, category: 'salon', ring: false,
+    hourCalm: 1_400, hourSurge: 1_500, pix24h: 64, payers24h: 60, amount24h: 5_900,
+    inflow30d: 158_000, payers30d: 1_300, fwd10: 0.02, firstTime: 0.28, peerPix: 58,
+    peerFwd: 0.03, medianTicket: 85, factors: { volume: 4, payers: 4, kickoff: 0, passthrough: 1 },
+    networkPts: 0, partner: false,
+  },
+  {
+    id: 'vianorte', name: 'Posto de Combustível Via Norte LTDA', short: 'Posto Via Norte',
+    cnae: '4731-8/00', activity: 'Fuel station', city: 'Guarulhos – SP', opened: '09 Aug 2008',
+    staff: 16, capital: 600_000, category: 'fuel', ring: false,
+    hourCalm: 7_200, hourSurge: 7_600, pix24h: 1_020, payers24h: 910, amount24h: 168_000,
+    inflow30d: 4_610_000, payers30d: 18_900, fwd10: 0.04, firstTime: 0.26, peerPix: 980,
+    peerFwd: 0.05, medianTicket: 160, factors: { volume: 3, payers: 4, kickoff: 0, passthrough: 2 },
+    networkPts: 0, partner: false,
+  },
+  // ---------- Already unusual / under review (unrelated to the betting ring) ----------
+  {
+    id: 'valeeletronicos', name: 'Comercial Vale Eletrônicos LTDA', short: 'Vale Eletrônicos',
+    cnae: '4753-9/00', activity: 'Electronics retail', city: 'São Paulo – SP', opened: '16 Jun 2026',
+    staff: 3, capital: 20_000, category: 'electronics', ring: false,
+    hourCalm: 6_400, hourSurge: 6_000, pix24h: 1_860, payers24h: 1_710, amount24h: 142_600,
+    inflow30d: 1_184_000, payers30d: 21_300, fwd10: 0.78, firstTime: 0.69, peerPix: 140,
+    peerFwd: 0.05, medianTicket: 69.9, factors: { volume: 28, payers: 16, kickoff: 2, passthrough: 26 },
+    networkPts: 0, partner: false,
+    note: 'Case opened Thu 12 Nov. Suspected fraud-collection account; documents requested from the client.',
+  },
+  {
+    id: 'bebidaslitoral', name: 'Distribuidora de Bebidas Litoral LTDA', short: 'Bebidas Litoral',
+    cnae: '4635-4/02', activity: 'Beverage wholesale', city: 'Santos – SP', opened: '25 Feb 2012',
+    staff: 18, capital: 350_000, category: 'beverage', ring: false, matchday: true,
+    hourCalm: 3_800, hourSurge: 7_900, pix24h: 940, payers24h: 610, amount24h: 118_000,
+    inflow30d: 2_140_000, payers30d: 6_800, fwd10: 0.06, firstTime: 0.18, peerPix: 520,
+    peerFwd: 0.05, medianTicket: 96, factors: { volume: 16, payers: 14, kickoff: 14, passthrough: 8 },
+    networkPts: 0, partner: false,
+    note: 'Match-day spikes are expected for a drinks distributor, and the money stays in the account. Monitoring, no action.',
+  },
+  {
+    id: 'horizonte', name: 'Imobiliária Horizonte Paulista LTDA', short: 'Imobiliária Horizonte',
+    cnae: '6821-8/01', activity: 'Real estate brokerage', city: 'São Paulo – SP', opened: '02 Mar 2014',
+    staff: 7, capital: 120_000, category: 'realestate', ring: false,
+    hourCalm: 2_000, hourSurge: 1_800, pix24h: 6, payers24h: 6, amount24h: 486_000,
+    inflow30d: 1_920_000, payers30d: 21, fwd10: 0.64, firstTime: 0.83, peerPix: 5,
+    peerFwd: 0.08, medianTicket: 62_000, factors: { volume: 6, payers: 2, kickoff: 0, passthrough: 38 },
+    networkPts: 0, partner: false,
+    note: 'Large transfers linked to a property sale. Sale contract requested before deciding.',
   },
   // ---------- Shell network (all registered to one phone + one address) ----------
   {
@@ -294,6 +411,10 @@ function buildSeries(b: Business, seed: number): Uint16Array {
       // Today's kick-off (5 simultaneous Série A matches) draws the heaviest deposit wave.
       KICKOFFS.forEach((k, j) => (spike = Math.max(spike, matchProfile(i - k.idx) * (j === KICKOFFS.length - 1 ? 2.2 : 1))))
       v = v * 0.06 + spike * 1.0
+    } else if (b.matchday) {
+      let spike = 0
+      for (const k of KICKOFFS) spike = Math.max(spike, matchProfile(i - k.idx))
+      v = v * 0.5 + spike * 0.9
     }
     raw[i] = v * (0.72 + 0.56 * r())
   }

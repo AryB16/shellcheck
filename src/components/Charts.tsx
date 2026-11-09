@@ -23,16 +23,16 @@ export function KickoffSparkline({ id }: { id: string }) {
   const area = `${d}L${Wd},${Hd}L0,${Hd}Z`
   return (
     <svg viewBox={`0 0 ${Wd} ${Hd + 16}`} className="block h-auto w-full">
-      <line x1={0} y1={Hd} x2={Wd} y2={Hd} stroke="#E6E8EC" />
-      <path d={area} fill="#F2A900" fillOpacity={0.16} />
-      <path d={d} fill="none" stroke="#D99700" strokeWidth={1.4} />
+      <line x1={0} y1={Hd} x2={Wd} y2={Hd} stroke="#2C3036" />
+      <path d={area} fill="#F0A92E" fillOpacity={0.14} />
+      <path d={d} fill="none" stroke="#F0A92E" strokeWidth={1.4} />
       {KICKOFFS.map((k) => {
         const kx = (k.idx / SERIES_MIN) * Wd
-        return <line key={k.idx} x1={kx} y1={0} x2={kx} y2={Hd} stroke="#0E1525" strokeOpacity={0.35} strokeDasharray="2 3" />
+        return <line key={k.idx} x1={kx} y1={0} x2={kx} y2={Hd} stroke="#ECEAE6" strokeOpacity={0.3} strokeDasharray="2 3" />
       })}
-      <text x={0} y={Hd + 13} fontSize={10} fill="#9AA2B1" fontFamily="IBM Plex Sans">Thu</text>
-      <text x={Wd / 2} y={Hd + 13} fontSize={10} fill="#9AA2B1" fontFamily="IBM Plex Sans" textAnchor="middle">Fri</text>
-      <text x={Wd} y={Hd + 13} fontSize={10} fill="#9AA2B1" fontFamily="IBM Plex Sans" textAnchor="end">Sat (now)</text>
+      <text x={0} y={Hd + 13} fontSize={10} fill="#878C94" fontFamily="IBM Plex Sans">Thu</text>
+      <text x={Wd / 2} y={Hd + 13} fontSize={10} fill="#878C94" fontFamily="IBM Plex Sans" textAnchor="middle">Fri</text>
+      <text x={Wd} y={Hd + 13} fontSize={10} fill="#878C94" fontFamily="IBM Plex Sans" textAnchor="end">Sat (now)</text>
     </svg>
   )
 }

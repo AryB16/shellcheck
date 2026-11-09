@@ -12,14 +12,14 @@ export function ReportDrawer() {
       {open && (
         <motion.div
           key="drawer"
-          className="absolute inset-0 z-20 flex items-stretch justify-center bg-ink/20 p-4 backdrop-blur-[2px]"
+          className="absolute inset-0 z-20 flex items-stretch justify-center bg-black/50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="flex w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_24px_60px_rgba(14,21,37,0.18)]"
+            className="flex w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_24px_60px_rgba(0,0,0,0.5)]"
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 24, opacity: 0 }}
@@ -60,7 +60,7 @@ function Report() {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-[0.8rem] font-semibold ${
-            filedAt != null ? 'bg-ink text-white' : done ? 'bg-risksoft text-risk' : 'bg-soft text-tx2'
+            filedAt != null ? 'bg-ink text-bg' : done ? 'bg-risksoft text-risk' : 'bg-soft text-tx2'
           }`}
         >
           {filedAt != null ? 'Filed' : done ? 'Needs your decision' : 'Writing…'}
@@ -175,7 +175,7 @@ function Decision({ done, filedAt }: { done: boolean; filedAt: number | null }) 
                   ev.currentTarget.blur()
                   controls.file()
                 }}
-                className="h-11 rounded-lg bg-ink px-5 text-[0.95rem] font-semibold text-white shadow-sm hover:bg-[#1d2638] disabled:cursor-not-allowed disabled:opacity-30"
+                className="h-11 rounded-lg bg-ink px-5 text-[0.95rem] font-semibold text-bg shadow-sm hover:bg-white disabled:cursor-not-allowed disabled:opacity-30"
               >
                 Approve &amp; file
               </button>
@@ -193,7 +193,7 @@ function Decision({ done, filedAt }: { done: boolean; filedAt: number | null }) 
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="grid h-10 w-10 place-items-center rounded-full bg-ink text-[1.1rem] text-white"
+              className="grid h-10 w-10 place-items-center rounded-full bg-ink text-[1.1rem] text-bg"
             >
               ✓
             </motion.span>

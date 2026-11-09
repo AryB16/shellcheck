@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
+import { EV_BIZ, EV_TIME, eventsUpTo } from '../data/feed'
 import { BUSINESSES, RING_ORDER, SHARED_ADDRESS, SHARED_PHONE } from '../data/model'
 import { ADDR_ID, H, PHONE_ID, POS_A, POS_B, W, type Pt } from '../data/layout'
-import { easeOut, lerp, moneyShort, type Cur } from '../lib/format'
+import { clamp01, easeOut, lerp, moneyShort, type Cur } from '../lib/format'
 import { BAND_COLOR, band, edgeProgress, hourOf, kickoffShown, moveT, networkTally, scoreOf, type EdgeDef } from '../sim/derive'
 import { controls, useSim } from '../sim/store'
 import { T2, T4, type Step } from '../sim/timeline'
@@ -14,10 +16,22 @@ RING_ORDER.forEach((id, k) => {
 
 const UNMASK_AT = T4.partner0
 const MAX_HOUR = 38_600
-const RED = '#E5383B'
-const INK = '#0E1525'
+const RED = '#EF4B43'
+const BLUE = '#7BA6F0'
+const TEXT = '#ECEAE6'
+const CANVAS = '#181A1E'
+const RIPPLE_SEC = 1.1
 
-const radius = (hour: number) => 9 + Math.sqrt(hour / MAX_HOUR) * 30
+const radius = (hour: number) => 8 + Math.sqrt(hour / MAX_HOUR) * 30
+
+// Outline of the ring once unmasked
+const RING_PTS = RING_ORDER.map((id) => POS_B[id])
+const HULL = {
+  cx: RING_PTS.reduce((s, p) => s + p.x, 0) / RING_PTS.length,
+  cy: RING_PTS.reduce((s, p) => s + p.y, 0) / RING_PTS.length,
+}
+const HULL_RX = Math.max(...RING_PTS.map((p) => Math.abs(p.x - HULL.cx))) + 70
+const HULL_RY = Math.max(...RING_PTS.map((p) => Math.abs(p.y - HULL.cy))) + 62
 
 function posOf(id: string, t: number): Pt {
   if (id === PHONE_ID || id === ADDR_ID) return POS_B[id]
@@ -29,78 +43,101 @@ function posOf(id: string, t: number): Pt {
 export function NetworkGraph() {
   const step = useSim((s) => s.step)
   const e = useSim((s) => s.elapsed)
+  const sim = useSim((s) => s.sim)
   const selected = useSim((s) => s.selected)
   const cur = useSim((s) => s.currency)
+  const [hover, setHover] = useState<string | null>(null)
 
   const t = moveT(step, e)
   const unmasked = step > 4 || (step === 4 && e >= UNMASK_AT)
   const hubScale = step < 4 ? 0 : step > 4 ? 1 : easeOut((e - T4.hubIn) / 320)
+  const hullT = step > 4 ? 1 : step === 4 ? clamp01((e - UNMASK_AT) / 700) : 0
+
+  // Every incoming Pix sends a ripple out of the receiving business.
+  const lo = eventsUpTo(sim - RIPPLE_SEC)
+  const hi = eventsUpTo(sim)
+  const ripples = []
+  for (let i = Math.max(lo, hi - 40); i < hi; i++) ripples.push({ i, b: BUSINESSES[EV_BIZ[i]], age: (sim - EV_TIME[i]) / RIPPLE_SEC })
+
+  const nodes = BUSINESSES.map((b) => {
+    const score = Math.round(scoreOf(b, step, e))
+    return { b, p: posOf(b.id, t), score, bd: band(score), r: radius(hourOf(b, step, e)), dim: !b.ring ? 1 - 0.65 * t : 1 }
+  })
+  const byId = Object.fromEntries(nodes.map((n) => [n.b.id, n]))
 
   return (
     <div className="dotgrid absolute inset-0">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full">
-        <defs>
-          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0E1525" floodOpacity="0.10" />
-          </filter>
-        </defs>
+        {/* Network outline */}
+        {hullT > 0 && (
+          <g opacity={hullT}>
+            <ellipse cx={HULL.cx} cy={HULL.cy} rx={HULL_RX * lerp(0.9, 1, hullT)} ry={HULL_RY * lerp(0.9, 1, hullT)} fill={RED} fillOpacity={0.035} stroke={RED} strokeOpacity={0.45} strokeWidth={1.5} strokeDasharray="7 7" />
+            <text x={HULL.cx} y={HULL.cy - HULL_RY - 10} textAnchor="middle" fontSize={13} fontWeight={600} letterSpacing="0.08em" fill={RED} fontFamily="IBM Plex Sans">
+              NETWORK SP-0412
+            </text>
+          </g>
+        )}
 
-        {/* Links */}
+        {/* Payment ripples */}
+        {ripples.map(({ i, b, age }) => {
+          const n = byId[b.id]
+          return (
+            <circle
+              key={i}
+              cx={n.p.x}
+              cy={n.p.y}
+              r={n.r + 3 + 22 * age}
+              fill="none"
+              stroke={BAND_COLOR[n.bd]}
+              strokeWidth={1.5}
+              opacity={0.55 * (1 - age) * n.dim}
+            />
+          )
+        })}
+
+        {/* Registry links */}
         {EDGES.map((edge) => {
           const p = edgeProgress(edge, step, e)
           if (p <= 0) return null
           const a = posOf(edge.a, t)
           const b = posOf(edge.b, t)
           return (
-            <line
-              key={edge.id}
-              x1={a.x}
-              y1={a.y}
-              x2={lerp(a.x, b.x, p)}
-              y2={lerp(a.y, b.y, p)}
-              stroke={RED}
-              strokeWidth={2}
-              strokeOpacity={0.55}
-              strokeLinecap="round"
-            />
+            <line key={edge.id} x1={a.x} y1={a.y} x2={lerp(a.x, b.x, p)} y2={lerp(a.y, b.y, p)} stroke={RED} strokeWidth={1.8} strokeOpacity={0.6} strokeLinecap="round" />
           )
         })}
 
-        {/* Hubs */}
+        {/* Registry records: phone + address */}
         {hubScale > 0 &&
           [PHONE_ID, ADDR_ID].map((id) => {
             const p = POS_B[id]
-            const c = unmasked ? RED : INK
             const phase = id === PHONE_ID && unmasked ? ((e - (step === 4 ? UNMASK_AT : 0)) % 2400) / 1500 : 2
             return (
               <g key={id} transform={`translate(${p.x},${p.y}) scale(${hubScale})`}>
-                {phase < 1 && <circle r={18 + 60 * phase} fill={RED} fillOpacity={0.14 * (1 - phase)} stroke={RED} strokeOpacity={0.5 * (1 - phase)} />}
-                <rect x={-13} y={-13} width={26} height={26} rx={4} transform="rotate(45)" fill={c} stroke="#E6E9EE" strokeWidth={3} filter="url(#shadow)" style={{ transition: 'fill 300ms' }} />
+                {phase < 1 && <circle r={18 + 60 * phase} fill="none" stroke={RED} strokeWidth={1.5} strokeOpacity={0.7 * (1 - phase)} />}
+                <rect x={-12} y={-12} width={24} height={24} rx={3} transform="rotate(45)" fill={CANVAS} stroke={BLUE} strokeWidth={2.5} />
+                <rect x={-5} y={-5} width={10} height={10} rx={1.5} transform="rotate(45)" fill={unmasked ? RED : BLUE} style={{ transition: 'fill 300ms' }} />
               </g>
             )
           })}
 
         {/* Businesses */}
-        {BUSINESSES.map((b) => {
-          const p = posOf(b.id, t)
-          const bd = band(scoreOf(b, step, e))
-          const r = radius(hourOf(b, step, e))
-          const dim = !b.ring ? 1 - 0.6 * t : 1
+        {nodes.map(({ b, p, bd, r, dim }) => {
+          const c = BAND_COLOR[bd]
           const isSel = selected === b.id
-          const low = bd === 'low'
           return (
-            <g key={b.id} transform={`translate(${p.x},${p.y})`} opacity={dim} onClick={() => controls.select(b.id)} style={{ cursor: 'pointer' }}>
+            <g
+              key={b.id}
+              transform={`translate(${p.x},${p.y})`}
+              opacity={dim}
+              onClick={() => controls.select(b.id)}
+              onMouseEnter={() => setHover(b.id)}
+              onMouseLeave={() => setHover((h) => (h === b.id ? null : h))}
+              style={{ cursor: 'pointer' }}
+            >
               <circle r={r + 16} fill="transparent" />
-              {!low && <circle r={r + 8} fill={BAND_COLOR[bd]} fillOpacity={0.14} />}
-              <circle
-                r={r}
-                fill={low ? '#D6DBE2' : BAND_COLOR[bd]}
-                stroke={low ? '#9EA7B5' : '#E6E9EE'}
-                strokeWidth={low ? 1.5 : 3}
-                filter={low ? undefined : 'url(#shadow)'}
-                style={{ transition: 'fill 350ms, stroke 350ms' }}
-              />
-              {isSel && <circle r={r + 12} fill="none" stroke={INK} strokeWidth={2} strokeDasharray="4 4" />}
+              <circle r={r} fill={c} fillOpacity={bd === 'low' ? 0.16 : 0.9} stroke={c} strokeWidth={bd === 'low' ? 1.5 : 0} style={{ transition: 'fill 350ms, stroke 350ms' }} />
+              {bd === 'low' && <circle r={2.5} fill={c} />}
+              {isSel && <circle r={r + 11} fill="none" stroke={TEXT} strokeWidth={1.5} strokeDasharray="3 4" />}
             </g>
           )
         })}
@@ -113,54 +150,57 @@ export function NetworkGraph() {
           ].map(({ id, k, v }) => {
             const p = POS_B[id]
             const w = Math.max(v.length * 8.4, (k.length + (unmasked ? 15 : 0)) * 7.4) + 24
-            const x0 = id === PHONE_ID ? -30 - w : 30
+            const x0 = id === PHONE_ID ? -28 - w : 28
             return (
               <g key={id} transform={`translate(${p.x},${p.y - 24})`} opacity={hubScale}>
-                <rect x={x0} y={0} width={w} height={48} rx={8} fill="#F1F3F6" stroke={unmasked ? RED : '#B7BFCB'} strokeWidth={1.5} filter="url(#shadow)" />
-                <text x={x0 + 12} y={19} fontSize={12.5} fill={unmasked ? RED : '#6B7485'} fontFamily="IBM Plex Sans" fontWeight={600}>
+                <rect x={x0} y={0} width={w} height={48} rx={7} fill="#1F2329" stroke={BLUE} strokeOpacity={0.55} strokeWidth={1.2} />
+                <text x={x0 + 12} y={19} fontSize={12.5} fill={BLUE} fontFamily="IBM Plex Sans" fontWeight={600}>
                   {k}
-                  {unmasked ? ' · 7 businesses' : ''}
+                  {unmasked && <tspan fill={RED}> · 7 businesses</tspan>}
                 </text>
-                <text x={x0 + 12} y={38} fontSize={15} fill={INK} fontFamily="IBM Plex Sans" fontWeight={500}>
+                <text x={x0 + 12} y={38} fontSize={15} fill={TEXT} fontFamily="IBM Plex Sans" fontWeight={500}>
                   {v}
                 </text>
               </g>
             )
           })}
 
-        {/* Labels */}
-        {BUSINESSES.map((b) => {
-          const p = posOf(b.id, t)
-          const score = Math.round(scoreOf(b, step, e))
-          const bd = band(score)
-          const r = radius(hourOf(b, step, e))
+        {/* Labels: only flagged, selected or hovered businesses */}
+        {nodes.map(({ b, p, score, bd, r, dim }) => {
           const isSel = selected === b.id
-          const dim = !b.ring ? 1 - t : 1
-          const strong = bd !== 'low' || isSel
-          const tw = b.short.length * (strong ? 9.4 : 7.7)
-          const pill = bd !== 'low'
+          const isHover = hover === b.id
+          const flagged = bd !== 'low'
+          // During the unmasking, only the ring keeps its labels.
+          if (!b.ring && t > 0.3 && !isSel && !isHover) return null
+          if (!flagged && !isSel && !isHover) return null
+          const tw = b.short.length * 9.2
           return (
-            <g key={b.id} transform={`translate(${p.x},${p.y + r + (isSel ? 30 : 24)})`} opacity={dim} pointerEvents="none">
+            <g key={b.id} transform={`translate(${p.x},${p.y + r + 26})`} opacity={isHover || isSel ? 1 : dim} pointerEvents="none">
               <text
                 textAnchor="middle"
-                x={pill ? -22 : 0}
-                fontSize={strong ? 17 : 14.5}
+                x={flagged ? -22 : 0}
+                fontSize={16.5}
                 fontFamily="IBM Plex Sans"
-                fontWeight={strong ? 600 : 400}
-                fill={strong ? INK : '#7A8394'}
-                stroke="#E6E9EE"
+                fontWeight={600}
+                fill={TEXT}
+                stroke={CANVAS}
                 strokeWidth={5}
                 paintOrder="stroke"
               >
                 {b.short}
               </text>
-              {pill && (
-                <g transform={`translate(${tw / 2 - 15},-15)`}>
+              {flagged && (
+                <g transform={`translate(${tw / 2 - 14},-15)`}>
                   <rect width={34} height={20} rx={10} fill={BAND_COLOR[bd]} />
-                  <text x={17} y={14.5} textAnchor="middle" fontSize={12.5} fontWeight={700} fill={bd === 'mid' ? INK : '#fff'} fontFamily="IBM Plex Sans">
+                  <text x={17} y={14.5} textAnchor="middle" fontSize={12.5} fontWeight={700} fill="#141619" fontFamily="IBM Plex Sans">
                     {score}
                   </text>
                 </g>
+              )}
+              {!flagged && (
+                <text y={18} textAnchor="middle" fontSize={12.5} fill="#878C94" fontFamily="IBM Plex Sans" stroke={CANVAS} strokeWidth={4} paintOrder="stroke">
+                  {b.activity} · score {score}
+                </text>
               )}
             </g>
           )
@@ -169,11 +209,14 @@ export function NetworkGraph() {
 
       <div className="pointer-events-none absolute left-5 top-4">
         <div className="text-[1rem] font-semibold text-ink">Business network</div>
-        <div className="text-[0.8rem] text-tx3">Bigger circle = more money in the last hour</div>
+        <div className="text-[0.8rem] text-tx3">Each ripple is a Pix payment arriving · bigger circle = more money in the last hour</div>
       </div>
       <KickoffChip step={step} e={e} />
       <NetworkReadout step={step} e={e} cur={cur} />
       <Legend />
+      <div className="pointer-events-none absolute bottom-4 right-5 max-w-[46%] text-right text-[0.7rem] leading-snug text-tx4">
+        Source: company fields and CNAE codes follow Receita Federal CNPJ open data; payments follow the Banco Central Pix format. Accounts are simulated.
+      </div>
     </div>
   )
 }
@@ -191,14 +234,10 @@ function KickoffChip({ step, e }: { step: Step; e: number }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className={`absolute right-4 top-4 flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 ${
-            live ? 'border-money/50 bg-moneysoft' : 'border-line bg-card'
-          }`}
+          className={`absolute right-4 top-4 flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 ${live ? 'border-money/40 bg-moneysoft' : 'border-line2 bg-card'}`}
         >
           <span className={`h-2 w-2 rounded-full ${live ? 'livedot bg-money' : 'bg-tx4'}`} />
-          <span className={`text-[0.9rem] font-semibold ${live ? 'text-moneyink' : 'text-tx2'}`}>
-            {live ? 'Kick-off · 5 matches live' : `Kick-off in ${left}s`}
-          </span>
+          <span className={`text-[0.9rem] font-semibold ${live ? 'text-moneyink' : 'text-tx2'}`}>{live ? 'Kick-off · 5 matches live' : `Kick-off in ${left}s`}</span>
         </motion.div>
       )}
     </AnimatePresence>
@@ -217,36 +256,36 @@ function NetworkReadout({ step, e, cur }: { step: Step; e: number; cur: Cur }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute left-5 top-[4.4rem] flex overflow-hidden rounded-xl border border-risk/40 bg-card shadow-[0_4px_16px_rgba(229,56,59,0.12)]"
+          className="absolute left-5 top-[4.4rem] flex overflow-hidden rounded-xl border border-risk/40 bg-card"
         >
-          <Stat v={String(n)} k={n === 1 ? 'business' : 'businesses'} />
-          <Stat v={n ? '1' : '0'} k="phone" />
-          <Stat v={n ? '1' : '0'} k="address" />
-          <Stat v={moneyShort(amount, cur)} k="in 30 days" money />
+          <Stat v={String(n)} k={n === 1 ? 'business' : 'businesses'} c="text-risk" />
+          <Stat v={n ? '1' : '0'} k="phone" c="text-link" />
+          <Stat v={n ? '1' : '0'} k="address" c="text-link" />
+          <Stat v={moneyShort(amount, cur)} k="in 30 days" c="text-moneyink" />
         </motion.div>
       )}
     </AnimatePresence>
   )
 }
 
-const Stat = ({ v, k, money }: { v: string; k: string; money?: boolean }) => (
+const Stat = ({ v, k, c }: { v: string; k: string; c: string }) => (
   <div className="border-r border-line px-4 py-2 last:border-r-0">
-    <div className={`text-[1.5rem] font-semibold leading-none ${money ? 'text-moneyink' : 'text-risk'}`}>{v}</div>
+    <div className={`text-[1.5rem] font-semibold leading-none ${c}`}>{v}</div>
     <div className="mt-1 text-[0.76rem] text-tx3">{k}</div>
   </div>
 )
 
 function Legend() {
+  const Dot = ({ c, hollow }: { c: string; hollow?: boolean }) => (
+    <i className="h-2.5 w-2.5 rounded-full" style={hollow ? { border: `1.5px solid ${c}`, background: `${c}33` } : { background: c }} />
+  )
   return (
     <div className="pointer-events-none absolute bottom-3.5 left-5 flex items-center gap-4 rounded-full border border-line bg-card/90 px-3.5 py-1.5 text-[0.78rem] text-tx2">
+      <span className="flex items-center gap-1.5"><Dot c="#5DB08F" hollow /> Normal</span>
+      <span className="flex items-center gap-1.5"><Dot c="#F0A92E" /> Unusual</span>
+      <span className="flex items-center gap-1.5"><Dot c="#EF4B43" /> High risk</span>
       <span className="flex items-center gap-1.5">
-        <i className="h-2.5 w-2.5 rounded-full border border-[#9EA7B5] bg-[#D6DBE2]" /> Normal
-      </span>
-      <span className="flex items-center gap-1.5">
-        <i className="h-2.5 w-2.5 rounded-full bg-money" /> Unusual
-      </span>
-      <span className="flex items-center gap-1.5">
-        <i className="h-2.5 w-2.5 rounded-full bg-risk" /> High risk
+        <i className="h-2.5 w-2.5 rotate-45 rounded-[2px] border-[1.5px] border-link" /> Registry record
       </span>
     </div>
   )

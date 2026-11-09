@@ -11,7 +11,7 @@ export const FEED_T1 = 18 * 3600 // 18:00:00
 export const KICKOFF_SEC = 16 * 3600 // 16:00:00
 export const PIX_BEFORE_T0 = 58_904 // Pix received by monitored accounts 00:00–15:00
 
-const LEGIT_RATE = 1.15
+const LEGIT_RATE = 1.7
 const RING_CALM = 0.14
 const RING_SURGE = 6.3
 
@@ -73,11 +73,15 @@ export function eventsUpTo(t: number) {
 export const pixToday = (t: number) => PIX_BEFORE_T0 + eventsUpTo(t)
 
 // ---------- Event detail, derived on demand ----------
-const BET = [10, 20, 20, 25, 30, 30, 50, 50, 50, 100, 100, 150, 200, 300]
+// Betting deposits: mostly round values, some odd ones to look like purchases
+const BET = [10, 20, 20, 25, 30, 30, 37.9, 50, 50, 50, 59.9, 100, 100, 150, 200, 300, 47.5, 89.9]
 const RANGES: Record<string, [number, number]> = {
   supermarket: [18, 420], pharmacy: [12, 240], restaurant: [24, 190], bakery: [4, 46],
   mechanic: [120, 2400], autoparts: [38, 860], optician: [180, 1200], school: [290, 890], petshop: [28, 340],
+  butcher: [22, 260], gym: [89, 199], snack: [9, 48], dental: [150, 1800], construction: [35, 2200], salon: [40, 320],
+  fuel: [60, 380], electronics: [45, 2800], beverage: [120, 4800], realestate: [1500, 95000],
 }
+const ENDINGS = [0, 0.5, 0.9, 0.99, 0, 0.9]
 const DESC: Record<string, string[]> = {
   supermarket: ['compras do mês', 'mercado', '', 'feira semana'],
   pharmacy: ['farmácia', 'remédios', '', 'receita'],
@@ -109,10 +113,11 @@ export function eventAt(i: number): PixEvent {
     amount = BET[Math.floor(u(1) * BET.length)]
     desc = u(2) < 0.55 ? `QR dinâmico · ref ${(h >>> 8).toString(16).toUpperCase().slice(0, 4)}-${String(h % 9000 + 1000)}` : u(2) < 0.8 ? 'créditos' : 'pagamento'
   } else {
-    const [lo, hi] = RANGES[b.category]
+    const [lo, hi] = RANGES[b.category] ?? [20, 300]
     const x = lo + (hi - lo) * Math.pow(u(1), 1.8)
-    amount = Math.round(x * 100) / 100
-    const opts = DESC[b.category]
+    // Realistic price endings: R$ 47.90, R$ 129.99, R$ 85.50
+    amount = Math.floor(x) + ENDINGS[Math.floor(u(4) * ENDINGS.length)]
+    const opts = DESC[b.category] ?? ['']
     desc = opts[Math.floor(u(2) * opts.length)]
   }
   const mid = String(Math.floor(u(3) * 1000)).padStart(3, '0')

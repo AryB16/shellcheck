@@ -1,23 +1,30 @@
 /** @type {import('tailwindcss').Config} */
+// Graphite theme. Colour carries meaning only:
+//   ok (green)  = normal business      warn (amber) = unusual
+//   risk (red)  = high risk            link (blue)  = registry records (phone, address)
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        bg: '#D5DAE1',
-        card: '#ECEFF3',
-        soft: '#E1E5EB',
-        line: '#CDD3DC',
-        line2: '#B7BFCB',
-        ink: '#0E1525',
-        tx2: '#3F4859',
-        tx3: '#5E6778',
-        tx4: '#858D9C',
-        risk: '#E5383B',
-        risksoft: '#F5DCDC',
-        money: '#F2A900',
-        moneyink: '#9A6500',
-        moneysoft: '#F6E9C4',
+        bg: '#141619',
+        card: '#1C1F23',
+        soft: '#24282D',
+        line: '#2C3036',
+        line2: '#3A3F46',
+        ink: '#ECEAE6',
+        tx2: '#B3B6BB',
+        tx3: '#878C94',
+        tx4: '#5F656E',
+        risk: '#EF4B43',
+        risksoft: '#33201F',
+        money: '#F0A92E',
+        moneyink: '#F3B54A',
+        moneysoft: '#33291A',
+        ok: '#5DB08F',
+        oksoft: '#1D2B26',
+        link: '#7BA6F0',
+        linksoft: '#1D2533',
       },
       fontFamily: {
         sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],

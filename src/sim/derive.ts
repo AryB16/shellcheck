@@ -7,7 +7,7 @@ import { T2, T3, T4, type Step } from './timeline'
 export const THRESHOLD = 70
 export type Band = 'low' | 'mid' | 'high'
 export const band = (s: number): Band => (s >= THRESHOLD ? 'high' : s >= 40 ? 'mid' : 'low')
-export const BAND_COLOR: Record<Band, string> = { low: '#9EA7B5', mid: '#F2A900', high: '#E5383B' }
+export const BAND_COLOR: Record<Band, string> = { low: '#5DB08F', mid: '#F0A92E', high: '#EF4B43' }
 
 export const kickoffShown = (step: Step, e: number) => step > 2 || (step === 2 && e >= T2.kickoff)
 

@@ -37,7 +37,6 @@ export function TopBar() {
           <div className="text-[0.92rem] font-medium text-ink">Banco Exemplo S.A.</div>
           <div className="text-[0.76rem] text-tx3">Compliance</div>
         </div>
-        <span className="rounded-full border border-line2 px-2.5 py-0.5 text-[0.72rem] font-medium text-tx3">Synthetic demo data</span>
       </div>
 
       <div className="ml-auto flex items-center gap-7">
@@ -54,7 +53,7 @@ export function TopBar() {
         <span className="h-8 w-px bg-line" />
         <CurrencyToggle cur={cur} />
         <div className="flex items-center gap-2.5 rounded-lg border border-line bg-soft px-3 py-1.5">
-          <span className={`h-2 w-2 rounded-full ${playing ? 'livedot bg-[#16A34A]' : 'bg-tx4'}`} />
+          <span className={`h-2 w-2 rounded-full ${playing ? 'livedot bg-ok' : 'bg-tx4'}`} />
           <div className="leading-tight">
             <div className="text-[0.95rem] font-medium text-ink">Sat 14 Nov · <span className="mono">{clock(sec)}</span></div>
             <div className="text-[0.7rem] text-tx3">{playing ? 'Live simulation' : 'Paused — press Space'}</div>
@@ -85,7 +84,7 @@ function CurrencyToggle({ cur }: { cur: Cur }) {
             controls.setCurrency(c)
           }}
           className={`rounded-md px-2.5 py-1 text-[0.8rem] font-medium transition-colors ${
-            cur === c ? 'bg-card text-ink shadow-[0_1px_2px_rgba(16,24,40,0.12)]' : 'text-tx3 hover:text-ink'
+            cur === c ? 'bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.4)]' : 'text-tx3 hover:text-ink'
           }`}
         >
           {c === 'BRL' ? 'R$ BRL' : '$ USD'}

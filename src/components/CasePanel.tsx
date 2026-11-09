@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { BY_ID, RING, RING_TOTAL_30D, STATS, TAROT, type Business, type FactorKey } from '../data/model'
+import { BUSINESSES, BY_ID, RING, RING_TOTAL_30D, STATS, TAROT, type Business, type FactorKey } from '../data/model'
 import { int, moneyShort, pct, type Cur } from '../lib/format'
 import { BAND_COLOR, THRESHOLD, TAROT_FLAGS, band, isLinked, kickoffShown, scoreOf, tarotFlagsVisible, tarotGauge } from '../sim/derive'
 import { controls, useSim } from '../sim/store'
@@ -30,57 +30,76 @@ export function CasePanel() {
 
 function EmptyState() {
   const anomaly = useSim((s) => s.step === 2 && kickoffShown(s.step, s.elapsed))
+  const scores = useSim((s) => BUSINESSES.map((b) => Math.round(scoreOf(b, s.step, s.elapsed))).join(','))
+  const sc = scores.split(',').map(Number)
+  const rows = BUSINESSES.map((b, i) => ({ b, score: sc[i] }))
+    .filter((r) => r.score >= 40)
+    .sort((a, z) => z.score - a.score)
+  const open = rows.filter((r) => r.score >= THRESHOLD)
+  const watching = rows.filter((r) => r.score < THRESHOLD)
   const t = BY_ID[TAROT]
   return (
-    <div className="flex flex-1 flex-col p-5">
+    <div className="flex min-h-0 flex-1 flex-col p-5">
       <div className="text-[1rem] font-semibold text-ink">Cases</div>
-      <AnimatePresence mode="wait" initial={false}>
-        {anomaly ? (
+      <div className="text-[0.8rem] text-tx3">{BUSINESSES.length} business accounts monitored</div>
+      <div className="scroll-thin mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto">
+        <AnimatePresence initial={false}>
+          {anomaly && (
+            <motion.button
+              key="a"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              onClick={(ev) => {
+                ev.currentTarget.blur()
+                controls.select(TAROT)
+              }}
+              className="w-full rounded-xl border border-money/40 bg-moneysoft p-4 text-left"
+            >
+              <div className="text-[0.8rem] font-semibold text-moneyink">New alert · just now</div>
+              <div className="mt-1 text-[1.1rem] font-semibold text-ink">{t.short}</div>
+              <div className="mt-1 text-[0.9rem] text-tx2">
+                Money coming in is <b className="text-ink">{Math.round(t.hourSurge / t.hourCalm)}×</b> its normal rate since kick-off.
+              </div>
+            </motion.button>
+          )}
+        </AnimatePresence>
+        <CaseList title="Open cases" rows={open.filter((r) => !(anomaly && r.b.id === TAROT))} />
+        <CaseList title="Watching" rows={watching.filter((r) => !(anomaly && r.b.id === TAROT))} />
+      </div>
+      <div className="mt-3 border-t border-line pt-3 text-[0.8rem] text-tx3">Click any business to see why it was scored.</div>
+    </div>
+  )
+}
+
+function CaseList({ title, rows }: { title: string; rows: { b: Business; score: number }[] }) {
+  if (!rows.length) return null
+  return (
+    <div>
+      <div className="label mb-1.5">
+        {title} · {rows.length}
+      </div>
+      <div className="overflow-hidden rounded-xl border border-line">
+        {rows.map(({ b, score }) => (
           <motion.button
-            key="a"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            layout="position"
+            key={b.id}
             onClick={(ev) => {
               ev.currentTarget.blur()
-              controls.select(TAROT)
+              controls.select(b.id)
             }}
-            className="mt-4 rounded-xl border border-money/50 bg-moneysoft p-4 text-left"
+            className="flex w-full items-center gap-3 border-b border-line px-3.5 py-2.5 text-left last:border-b-0 hover:bg-soft"
           >
-            <div className="text-[0.8rem] font-semibold text-moneyink">Unusual activity</div>
-            <div className="mt-1 text-[1.1rem] font-semibold text-ink">{t.short}</div>
-            <div className="mt-1 text-[0.9rem] text-tx2">
-              Money coming in is <b className="text-ink">{Math.round(t.hourSurge / t.hourCalm)}×</b> its normal rate since kick-off.
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: BAND_COLOR[band(score)] }} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[0.95rem] font-medium text-ink">{b.short}</div>
+              <div className="truncate text-[0.78rem] text-tx3">{b.activity}</div>
             </div>
-            <div className="mt-2 text-[0.8rem] text-tx3">Scoring in progress…</div>
+            <span className="text-[1rem] font-semibold" style={{ color: BAND_COLOR[band(score)] }}>
+              {score}
+            </span>
           </motion.button>
-        ) : (
-          <motion.div key="n" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-4 rounded-xl border border-line bg-soft p-4">
-            <div className="text-[1.05rem] font-semibold text-ink">No open cases</div>
-            <div className="mt-1 text-[0.9rem] text-tx2">All 16 business accounts look normal.</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="mt-auto">
-        <div className="label">How ShellCheck works</div>
-        <ol className="mt-3 space-y-3">
-          {[
-            ['Watch', 'Every Pix payment into a business account.'],
-            ['Score', 'Compare the money with what the business declared it does.'],
-            ['Connect', 'Link businesses that share a phone, address or owner.'],
-            ['Report', 'Draft the report. A human analyst decides.'],
-          ].map(([h, d], i) => (
-            <li key={h} className="flex gap-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-soft text-[0.78rem] font-semibold text-tx2 ring-1 ring-line">{i + 1}</span>
-              <div>
-                <div className="text-[0.92rem] font-semibold text-ink">{h}</div>
-                <div className="text-[0.84rem] text-tx3">{d}</div>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-4 text-[0.8rem] text-tx4">Click any circle to inspect a business.</div>
+        ))}
       </div>
     </div>
   )
@@ -106,7 +125,7 @@ function CaseView({ b }: { b: Business }) {
   const alert = bd === 'high'
   const scored = !isTarot || step >= 3
   const status = filed && b.ring ? 'Filed with COAF' : alert ? 'High risk' : bd === 'mid' ? 'Unusual' : 'Normal'
-  const statusCls = filed && b.ring ? 'bg-ink text-white' : alert ? 'bg-risksoft text-risk' : bd === 'mid' ? 'bg-moneysoft text-moneyink' : 'bg-soft text-tx2'
+  const statusCls = filed && b.ring ? 'bg-ink text-bg' : alert ? 'bg-risksoft text-risk' : bd === 'mid' ? 'bg-moneysoft text-moneyink' : 'bg-soft text-tx2'
   const flagKeys: FactorKey[] = isTarot ? [...TAROT_FLAGS.slice(0, flagsN)] : ['volume', 'payers', 'kickoff', 'passthrough']
   const showFlags = scored && (b.ring || score >= 40)
 
@@ -177,7 +196,7 @@ function CaseView({ b }: { b: Business }) {
 
         {/* Flags */}
         <div className="mt-4">
-          <div className="label">{!scored ? 'Why it may be flagged' : alert || isTarot ? 'Why it’s flagged' : b.ring ? 'Weak signals on its own' : 'Checks'}</div>
+          <div className="label">{!scored ? 'Why it may be flagged' : alert || isTarot ? 'Why it’s flagged' : b.ring ? 'Weak signals on its own' : bd === 'mid' ? 'Why it’s unusual' : 'Checks'}</div>
           {!showFlags && scored && <div className="mt-2 text-[0.9rem] text-tx2">No red flags. Its money matches what it declared.</div>}
           {!scored && <div className="mt-2 text-[0.9rem] text-tx3">Waiting for the scoring run…</div>}
           <div className="mt-2 space-y-2">
@@ -187,6 +206,12 @@ function CaseView({ b }: { b: Business }) {
             </AnimatePresence>
           </div>
         </div>
+        {b.note && (
+          <div className="mt-4 rounded-xl border border-line bg-soft p-3.5">
+            <div className="label">Analyst note</div>
+            <div className="mt-1 text-[0.9rem] leading-snug text-tx2">{b.note}</div>
+          </div>
+        )}
       </div>
 
       {b.ring && alert && (
@@ -198,7 +223,7 @@ function CaseView({ b }: { b: Business }) {
                 controls.draft()
               }}
               className={`h-11 w-full rounded-lg text-[0.95rem] font-semibold transition-colors ${
-                t4done ? 'bg-ink text-white hover:bg-[#1d2638]' : 'border border-line2 text-ink hover:bg-soft'
+                t4done ? 'bg-ink text-bg hover:bg-white' : 'border border-line2 text-ink hover:bg-soft'
               }`}
             >
               Draft report for COAF →
@@ -230,9 +255,9 @@ const flagMotion = {
 
 function FlagRow({ strong, pts, children, extra }: { strong: boolean; pts: string; children: React.ReactNode; extra?: React.ReactNode }) {
   return (
-    <motion.div {...flagMotion} className={`rounded-xl border p-3 ${strong ? 'border-risk/30 bg-[#F3F5F8]' : 'border-line bg-soft'}`}>
+    <motion.div {...flagMotion} className={`rounded-xl border p-3 ${strong ? 'border-risk/30 bg-risksoft/40' : 'border-line bg-soft'}`}>
       <div className="flex items-start gap-3">
-        <span className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${strong ? 'bg-risk' : 'bg-tx4'}`} />
+        <span className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${strong ? 'bg-risk' : 'bg-money'}`} />
         <div className={`flex-1 text-[0.95rem] leading-snug ${strong ? 'text-ink' : 'text-tx2'}`}>{children}</div>
         <span className={`shrink-0 text-[0.85rem] font-semibold ${strong ? 'text-risk' : 'text-tx4'}`}>{pts}</span>
       </div>
@@ -251,6 +276,10 @@ function Flag({ b, k, strong }: { b: Business; k: FactorKey; strong: boolean }) 
           <>
             <b>{Math.round(r)}× more payments</b> than similar businesses
           </>
+        ) : r >= 1.4 ? (
+          <>
+            <b>{r.toFixed(1)}×</b> the payments of similar businesses
+          </>
         ) : (
           <>Payment volume is normal for its sector</>
         )}
@@ -266,7 +295,7 @@ function Flag({ b, k, strong }: { b: Business; k: FactorKey; strong: boolean }) 
   if (k === 'kickoff') {
     const st = STATS[b.id]
     return (
-      <FlagRow strong={strong} pts={pts} extra={st.hits > 0 && strong ? <KickoffSparkline id={b.id} /> : undefined}>
+      <FlagRow strong={strong} pts={pts} extra={st.hits > 0 ? <KickoffSparkline id={b.id} /> : undefined}>
         {st.hits > 0 ? (
           <>
             Payments spike at <b>every football kick-off</b>

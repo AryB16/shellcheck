@@ -45,7 +45,7 @@ export function PixFeed() {
               style={{ height: `${ROW_REM}rem`, transform: `translateY(${k * ROW_REM}rem)`, transition: 'transform 160ms ease-out' }}
             >
               <div className="flex h-full items-center gap-3">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: hot ? BAND_COLOR[bd] : '#C3CAD4' }} />
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: hot ? BAND_COLOR[bd] : '#3A3F46' }} />
                 <span className={`min-w-0 flex-1 truncate text-[0.95rem] ${hot ? 'font-medium text-ink' : 'text-tx2'}`}>{ev.business.short}</span>
                 <span className="shrink-0 text-[0.95rem] font-medium text-ink">{money(ev.amount, cur)}</span>
               </div>

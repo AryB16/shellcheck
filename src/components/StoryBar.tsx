@@ -23,7 +23,7 @@ function caption(step: Step, e: number, filed: boolean, cur: Cur): Caption {
       return {
         key: '1',
         title: 'ShellCheck watches every Pix payment into business accounts',
-        sub: 'Pix is Brazil’s instant payment system. Right now, all 16 businesses at this bank look normal.',
+        sub: 'Pix is Brazil’s instant payment system. One case is already open and two accounts look unusual. The rest look normal.',
         next: 'Start the football match',
       }
     case 2:
@@ -108,13 +108,13 @@ export function StoryBar() {
                 }}
                 className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.8rem] font-medium transition-colors ${
                   state === 'now'
-                    ? 'border-ink bg-ink text-white'
+                    ? 'border-ink bg-ink text-bg'
                     : state === 'done'
                       ? 'border-line bg-soft text-tx2 hover:text-ink'
                       : 'border-line text-tx4 hover:text-tx2'
                 }`}
               >
-                <span className={`grid h-4 w-4 place-items-center rounded-full text-[0.66rem] ${state === 'now' ? 'bg-white text-ink' : state === 'done' ? 'bg-tx3 text-white' : 'bg-line text-tx3'}`}>
+                <span className={`grid h-4 w-4 place-items-center rounded-full text-[0.66rem] ${state === 'now' ? 'bg-bg text-ink' : state === 'done' ? 'bg-tx4 text-bg' : 'bg-line text-tx3'}`}>
                   {state === 'done' ? '✓' : s.n}
                 </span>
                 {s.name}
@@ -160,7 +160,7 @@ export function StoryBar() {
               onNext()
             }}
             title="Shortcut: → (Space pauses, R restarts, C switches currency)"
-            className="flex h-10 items-center gap-2 rounded-lg bg-ink px-4 text-[0.92rem] font-medium text-white shadow-sm hover:bg-[#1d2638]"
+            className="flex h-10 items-center gap-2 rounded-lg bg-ink px-4 text-[0.92rem] font-medium text-bg shadow-sm hover:bg-white"
           >
             {c.next}
             <span className="opacity-70">{step === 5 && filed ? '↺' : '→'}</span>
