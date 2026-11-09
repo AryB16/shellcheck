@@ -3,7 +3,7 @@ import { CasePanel } from './components/CasePanel'
 import { NetworkGraph } from './components/NetworkGraph'
 import { PixFeed } from './components/PixFeed'
 import { ReportDrawer } from './components/ReportDrawer'
-import { StatusBar } from './components/StatusBar'
+import { StoryBar } from './components/StoryBar'
 import { TopBar } from './components/TopBar'
 import { controls, getState } from './sim/store'
 import type { Step } from './sim/timeline'
@@ -19,6 +19,7 @@ export function App() {
       else if (k === 'ArrowRight') controls.next()
       else if (k === 'ArrowLeft') controls.prev()
       else if (k === 'r' || k === 'R') controls.reset()
+      else if (k === 'c' || k === 'C') controls.toggleCurrency()
       else if (k >= '1' && k <= '5') controls.goto(Number(k) as Step)
       else if (k === 'Escape' && getState().step < 3) controls.select(null)
     }
@@ -29,18 +30,28 @@ export function App() {
   return (
     <div className="flex h-full flex-col bg-bg">
       <TopBar />
+      <StoryBar />
       <main
-        className="grid min-h-0 flex-1 border-b border-line"
-        style={{ gridTemplateColumns: 'clamp(300px, 20vw, 390px) minmax(0, 1fr) clamp(380px, 25.5vw, 500px)' }}
+        className="grid min-h-0 flex-1 gap-3 px-4 pb-3"
+        style={{ gridTemplateColumns: 'clamp(305px, 20vw, 370px) minmax(0, 1fr) clamp(350px, 24vw, 450px)' }}
       >
         <PixFeed />
-        <section className="relative min-w-0 overflow-hidden border-x border-line">
+        <section className="card relative min-w-0 overflow-hidden">
           <NetworkGraph />
           <ReportDrawer />
         </section>
         <CasePanel />
       </main>
-      <StatusBar />
+      <footer className="flex h-7 shrink-0 items-center justify-between px-5 text-[0.72rem] text-tx4">
+        <span>
+          Keyboard: <K>Space</K> pause <K>→</K> next <K>←</K> back <K>R</K> restart <K>C</K> currency
+        </span>
+        <span>Synthetic demo data · no real companies or people</span>
+      </footer>
     </div>
   )
 }
+
+const K = ({ children }: { children: React.ReactNode }) => (
+  <span className="mx-1 rounded border border-line2 bg-card px-1 py-[1px] text-[0.66rem] text-tx3">{children}</span>
+)

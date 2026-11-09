@@ -41,9 +41,11 @@ npx vercel --prod
 | `←` | Previous step |
 | `1`–`5` | Jump to a step (prior steps render in their completed state) |
 | `R` | Full reset to step 1 |
+| `C` | Switch currency between BRL and USD (fixed demo rate: US$ 1 = R$ 5.40) |
 | `Esc` | Back to the watchlist (steps 1–2) |
 
-The step bar in the footer is also clickable.
+Judges can drive it without a presenter: the **story bar** under the top bar narrates each step in plain English.
+Its **Next** button walks through the demo, and the step pills jump straight to a step. Any circle on the graph opens that business's case.
 
 ## The 60-second script
 

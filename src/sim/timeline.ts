@@ -30,5 +30,5 @@ export const T4 = {
   partnerGap: 220,
 }
 export const T4_DONE = T4.partner0 + 2 * T4.partnerGap + 400
-export const T5 = { stream: 500, streamDur: 6800 }
+export const T5 = { stream: 500, streamDur: 5000 }
 export const REPORT_DONE = T5.stream + T5.streamDur

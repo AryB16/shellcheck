@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import type { Cur } from '../lib/format'
 import { TAROT } from '../data/model'
 import { REPORT_DONE, STEP_BASE, type Step } from './timeline'
 
@@ -11,6 +12,7 @@ export interface SimState {
   playing: boolean
   selected: string | null
   filedAt: number | null
+  currency: Cur
 }
 
 const initial = (): SimState => ({
@@ -20,6 +22,7 @@ const initial = (): SimState => ({
   playing: true,
   selected: null,
   filedAt: null,
+  currency: 'BRL',
 })
 
 let state: SimState = initial()
@@ -89,9 +92,11 @@ export const controls = {
     if (state.step > 1) goto((state.step - 1) as Step)
   },
   reset() {
-    state = initial()
+    state = { ...initial(), currency: state.currency }
     emit()
   },
+  toggleCurrency: () => set({ currency: state.currency === 'BRL' ? 'USD' : 'BRL' }),
+  setCurrency: (c: Cur) => set({ currency: c }),
   select: (id: string | null) => set({ selected: id }),
   draft() {
     if (state.step < 5) goto(5)

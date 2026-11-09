@@ -2,15 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-html { font-size: 14px; }
-@media (max-width: 1600px), (max-height: 900px) { html { font-size: 12.5px; } }
+:root { color-scheme: light; }
+html { font-size: 15px; }
+@media (max-width: 1600px), (max-height: 900px) { html { font-size: 13px; } }
 
 html, body, #root { height: 100%; }
 body {
   margin: 0;
-  background: #0B1020;
-  color: #DCE2EE;
+  background: #F3F4F6;
+  color: #0E1525;
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
@@ -18,39 +18,43 @@ body {
   overflow: hidden;
   user-select: none;
 }
-.mono, .font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 
-/* Small-caps style labels */
-.cap {
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-size: 0.74rem;
-  font-weight: 500;
-  color: #7A84A0;
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E6E8EC;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 2px 6px rgba(16, 24, 40, 0.04);
 }
-
-.gridbg {
-  background-color: #0A0F1E;
-  background-image:
-    linear-gradient(rgba(140, 156, 196, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(140, 156, 196, 0.045) 1px, transparent 1px);
-  background-size: 44px 44px;
-  background-position: -1px -1px;
+.label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6B7485;
+}
+.dotgrid {
+  background-color: #FCFCFD;
+  background-image: radial-gradient(#E3E6EB 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 @keyframes rowIn {
-  from { opacity: 0; background-color: rgba(220, 226, 238, 0.06); }
-  to { opacity: 1; background-color: rgba(220, 226, 238, 0); }
+  from { opacity: 0; background-color: rgba(242, 169, 0, 0.10); }
+  to { opacity: 1; background-color: rgba(242, 169, 0, 0); }
 }
-.row-in { animation: rowIn 600ms ease-out; }
+.row-in { animation: rowIn 700ms ease-out; }
 
 @keyframes caret { 50% { opacity: 0; } }
 .caret { animation: caret 0.9s steps(1) infinite; }
 
+@keyframes livedot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.livedot { animation: livedot 1.6s ease-in-out infinite; }
+
 button { font: inherit; }
 button:focus { outline: none; }
-button:focus-visible { outline: 1px solid #A3ADC2; outline-offset: 2px; }
+button:focus-visible { outline: 2px solid #0E1525; outline-offset: 2px; }
 
 .scroll-thin::-webkit-scrollbar { width: 6px; }
-.scroll-thin::-webkit-scrollbar-thumb { background: #273254; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #D3D7DE; border-radius: 3px; }
 .scroll-thin::-webkit-scrollbar-track { background: transparent; }
