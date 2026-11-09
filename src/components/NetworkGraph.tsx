@@ -75,7 +75,7 @@ export function NetworkGraph() {
             return (
               <g key={id} transform={`translate(${p.x},${p.y}) scale(${hubScale})`}>
                 {phase < 1 && <circle r={18 + 60 * phase} fill={RED} fillOpacity={0.14 * (1 - phase)} stroke={RED} strokeOpacity={0.5 * (1 - phase)} />}
-                <rect x={-13} y={-13} width={26} height={26} rx={4} transform="rotate(45)" fill={c} stroke="#fff" strokeWidth={3} filter="url(#shadow)" style={{ transition: 'fill 300ms' }} />
+                <rect x={-13} y={-13} width={26} height={26} rx={4} transform="rotate(45)" fill={c} stroke="#E6E9EE" strokeWidth={3} filter="url(#shadow)" style={{ transition: 'fill 300ms' }} />
               </g>
             )
           })}
@@ -94,8 +94,8 @@ export function NetworkGraph() {
               {!low && <circle r={r + 8} fill={BAND_COLOR[bd]} fillOpacity={0.14} />}
               <circle
                 r={r}
-                fill={low ? '#E9ECF1' : BAND_COLOR[bd]}
-                stroke={low ? '#B4BCC8' : '#fff'}
+                fill={low ? '#D6DBE2' : BAND_COLOR[bd]}
+                stroke={low ? '#9EA7B5' : '#E6E9EE'}
                 strokeWidth={low ? 1.5 : 3}
                 filter={low ? undefined : 'url(#shadow)'}
                 style={{ transition: 'fill 350ms, stroke 350ms' }}
@@ -116,7 +116,7 @@ export function NetworkGraph() {
             const x0 = id === PHONE_ID ? -30 - w : 30
             return (
               <g key={id} transform={`translate(${p.x},${p.y - 24})`} opacity={hubScale}>
-                <rect x={x0} y={0} width={w} height={48} rx={8} fill="#fff" stroke={unmasked ? RED : '#D3D7DE'} strokeWidth={1.5} filter="url(#shadow)" />
+                <rect x={x0} y={0} width={w} height={48} rx={8} fill="#F1F3F6" stroke={unmasked ? RED : '#B7BFCB'} strokeWidth={1.5} filter="url(#shadow)" />
                 <text x={x0 + 12} y={19} fontSize={12.5} fill={unmasked ? RED : '#6B7485'} fontFamily="IBM Plex Sans" fontWeight={600}>
                   {k}
                   {unmasked ? ' · 7 businesses' : ''}
@@ -135,20 +135,20 @@ export function NetworkGraph() {
           const bd = band(score)
           const r = radius(hourOf(b, step, e))
           const isSel = selected === b.id
-          const dim = !b.ring ? 1 - 0.6 * t : 1
+          const dim = !b.ring ? 1 - t : 1
           const strong = bd !== 'low' || isSel
-          const tw = b.short.length * (strong ? 8.3 : 7.2)
+          const tw = b.short.length * (strong ? 9.4 : 7.7)
           const pill = bd !== 'low'
           return (
             <g key={b.id} transform={`translate(${p.x},${p.y + r + (isSel ? 30 : 24)})`} opacity={dim} pointerEvents="none">
               <text
                 textAnchor="middle"
-                x={pill ? -21 : 0}
-                fontSize={strong ? 15 : 13.5}
+                x={pill ? -22 : 0}
+                fontSize={strong ? 17 : 14.5}
                 fontFamily="IBM Plex Sans"
                 fontWeight={strong ? 600 : 400}
                 fill={strong ? INK : '#7A8394'}
-                stroke="#FCFCFD"
+                stroke="#E6E9EE"
                 strokeWidth={5}
                 paintOrder="stroke"
               >
@@ -169,7 +169,7 @@ export function NetworkGraph() {
 
       <div className="pointer-events-none absolute left-5 top-4">
         <div className="text-[1rem] font-semibold text-ink">Business network</div>
-        <div className="text-[0.8rem] text-tx3">Each circle is a business account. Bigger means more money in the last hour.</div>
+        <div className="text-[0.8rem] text-tx3">Bigger circle = more money in the last hour</div>
       </div>
       <KickoffChip step={step} e={e} />
       <NetworkReadout step={step} e={e} cur={cur} />
@@ -240,7 +240,7 @@ function Legend() {
   return (
     <div className="pointer-events-none absolute bottom-3.5 left-5 flex items-center gap-4 rounded-full border border-line bg-card/90 px-3.5 py-1.5 text-[0.78rem] text-tx2">
       <span className="flex items-center gap-1.5">
-        <i className="h-2.5 w-2.5 rounded-full border border-[#B4BCC8] bg-[#E9ECF1]" /> Normal
+        <i className="h-2.5 w-2.5 rounded-full border border-[#9EA7B5] bg-[#D6DBE2]" /> Normal
       </span>
       <span className="flex items-center gap-1.5">
         <i className="h-2.5 w-2.5 rounded-full bg-money" /> Unusual

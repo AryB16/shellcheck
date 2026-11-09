@@ -1,5 +1,4 @@
 import { BUSINESSES } from '../data/model'
-import { pixToday } from '../data/feed'
 import { clock, int, moneyShort, type Cur } from '../lib/format'
 import { THRESHOLD, scoreOf } from '../sim/derive'
 import { controls, useSim } from '../sim/store'
@@ -20,7 +19,6 @@ function flaggedKey(step: Parameters<typeof scoreOf>[1], e: number) {
 export function TopBar() {
   const sec = useSim((s) => Math.floor(s.sim))
   const playing = useSim((s) => s.playing)
-  const pix = useSim((s) => pixToday(s.sim))
   const cur = useSim((s) => s.currency)
   const flagged = useSim((s) => flaggedKey(s.step, s.elapsed))
   const [nFlag, amt] = flagged.split('|').map(Number)
@@ -37,12 +35,12 @@ export function TopBar() {
         <span className="h-6 w-px bg-line" />
         <div className="leading-tight">
           <div className="text-[0.92rem] font-medium text-ink">Banco Exemplo S.A.</div>
-          <div className="text-[0.76rem] text-tx3">Compliance team</div>
+          <div className="text-[0.76rem] text-tx3">Compliance</div>
         </div>
+        <span className="rounded-full border border-line2 px-2.5 py-0.5 text-[0.72rem] font-medium text-tx3">Synthetic demo data</span>
       </div>
 
       <div className="ml-auto flex items-center gap-7">
-        <Kpi label="Pix payments checked today" value={int(pix)} />
         <Kpi
           label="Businesses flagged"
           value={<AnimatedNumber value={nFlag} format={int} duration={0.4} />}

@@ -126,7 +126,7 @@ function CaseView({ b }: { b: Business }) {
           <span className={`rounded-full px-2.5 py-0.5 text-[0.78rem] font-semibold ${statusCls}`}>{status}</span>
         </div>
         <h2 className="mt-2 text-[1.3rem] font-semibold leading-tight tracking-[-0.01em] text-ink">{b.short}</h2>
-        <div className="text-[0.85rem] text-tx3">{b.city} · opened {b.opened}</div>
+        <div className="text-[0.85rem] text-tx3">{b.city}</div>
       </div>
 
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-5 pb-4">
@@ -170,10 +170,8 @@ function CaseView({ b }: { b: Business }) {
             <div className="h-full rounded-full" style={{ width: `${score}%`, background: score >= 40 ? BAND_COLOR[band(score)] : '#B4BCC8' }} />
             <div className="absolute -top-1 bottom-[-4px] w-[2px] bg-ink/60" style={{ left: `${THRESHOLD}%` }} />
           </div>
-          <div className="mt-1 flex justify-between text-[0.72rem] text-tx4">
-            <span>Normal</span>
-            <span style={{ marginLeft: `${THRESHOLD - 18}%` }}>Alert at {THRESHOLD}</span>
-            <span>100</span>
+          <div className="relative mt-1 h-4 text-[0.72rem] text-tx3">
+            <span className="absolute -translate-x-1/2" style={{ left: `${THRESHOLD}%` }}>Alert at {THRESHOLD}</span>
           </div>
         </div>
 
@@ -232,7 +230,7 @@ const flagMotion = {
 
 function FlagRow({ strong, pts, children, extra }: { strong: boolean; pts: string; children: React.ReactNode; extra?: React.ReactNode }) {
   return (
-    <motion.div {...flagMotion} className={`rounded-xl border p-3 ${strong ? 'border-risk/25 bg-white' : 'border-line bg-soft'}`}>
+    <motion.div {...flagMotion} className={`rounded-xl border p-3 ${strong ? 'border-risk/30 bg-[#F3F5F8]' : 'border-line bg-soft'}`}>
       <div className="flex items-start gap-3">
         <span className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${strong ? 'bg-risk' : 'bg-tx4'}`} />
         <div className={`flex-1 text-[0.95rem] leading-snug ${strong ? 'text-ink' : 'text-tx2'}`}>{children}</div>

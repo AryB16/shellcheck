@@ -32,7 +32,7 @@ export function App() {
       <TopBar />
       <StoryBar />
       <main
-        className="grid min-h-0 flex-1 gap-3 px-4 pb-3"
+        className="grid min-h-0 flex-1 gap-3 px-4 pb-4"
         style={{ gridTemplateColumns: 'clamp(305px, 20vw, 370px) minmax(0, 1fr) clamp(350px, 24vw, 450px)' }}
       >
         <PixFeed />
@@ -42,16 +42,7 @@ export function App() {
         </section>
         <CasePanel />
       </main>
-      <footer className="flex h-7 shrink-0 items-center justify-between px-5 text-[0.72rem] text-tx4">
-        <span>
-          Keyboard: <K>Space</K> pause <K>→</K> next <K>←</K> back <K>R</K> restart <K>C</K> currency
-        </span>
-        <span>Synthetic demo data · no real companies or people</span>
-      </footer>
     </div>
   )
 }
 
-const K = ({ children }: { children: React.ReactNode }) => (
-  <span className="mx-1 rounded border border-line2 bg-card px-1 py-[1px] text-[0.66rem] text-tx3">{children}</span>
-)

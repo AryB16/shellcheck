@@ -159,6 +159,7 @@ export function StoryBar() {
               ev.currentTarget.blur()
               onNext()
             }}
+            title="Shortcut: → (Space pauses, R restarts, C switches currency)"
             className="flex h-10 items-center gap-2 rounded-lg bg-ink px-4 text-[0.92rem] font-medium text-white shadow-sm hover:bg-[#1d2638]"
           >
             {c.next}
