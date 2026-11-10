@@ -9,7 +9,7 @@ import { KickoffSparkline } from './Charts'
 export function CasePanel() {
   const selected = useSim((s) => s.selected)
   return (
-    <aside className="card flex min-h-0 flex-col overflow-hidden">
+    <aside className="card flex min-h-[480px] flex-col overflow-hidden lg:min-h-0">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={selected ?? 'empty'}
@@ -229,16 +229,16 @@ function CaseView({ b }: { b: Business }) {
               Draft report for COAF →
             </button>
           ) : filed ? (
-            <div className="flex h-11 items-center justify-center gap-2 rounded-lg bg-soft text-[0.92rem] font-medium text-ink">
-              Filed · case SC-2026-0412
-            </div>
+            <button onClick={(ev) => { ev.currentTarget.blur(); controls.showReport() }} className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-soft text-[0.92rem] font-medium text-ink hover:bg-line">
+              Filed · case SC-2026-0412 · view report
+            </button>
           ) : (
-            <div className="h-11 overflow-hidden rounded-lg bg-soft ring-1 ring-line">
+            <button onClick={(ev) => { ev.currentTarget.blur(); controls.showReport() }} className="block h-11 w-full overflow-hidden rounded-lg bg-soft ring-1 ring-line">
               <div className="relative flex h-full items-center justify-center text-[0.92rem] font-medium text-ink">
                 <div className="absolute inset-y-0 left-0 bg-line" style={{ width: `${reportPct}%` }} />
                 <span className="relative">{reportPct < 100 ? `Drafting report… ${reportPct}%` : 'Waiting for analyst decision'}</span>
               </div>
-            </div>
+            </button>
           )}
         </div>
       )}

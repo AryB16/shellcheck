@@ -13,6 +13,7 @@ export interface SimState {
   selected: string | null
   filedAt: number | null
   currency: Cur
+  reportHidden: boolean
 }
 
 const initial = (): SimState => ({
@@ -23,6 +24,7 @@ const initial = (): SimState => ({
   selected: null,
   filedAt: null,
   currency: 'BRL',
+  reportHidden: false,
 })
 
 let state: SimState = initial()
@@ -77,7 +79,7 @@ function goto(step: Step) {
   let selected = state.selected
   if (step >= 3) selected = TAROT
   else if (back) selected = null
-  set({ step, elapsed: 0, sim, selected, filedAt: null, playing: true })
+  set({ step, elapsed: 0, sim, selected, filedAt: null, playing: true, reportHidden: false })
 }
 
 export const controls = {
@@ -95,6 +97,8 @@ export const controls = {
     state = { ...initial(), currency: state.currency }
     emit()
   },
+  hideReport: () => set({ reportHidden: true }),
+  showReport: () => set({ reportHidden: false }),
   toggleCurrency: () => set({ currency: state.currency === 'BRL' ? 'USD' : 'BRL' }),
   setCurrency: (c: Cur) => set({ currency: c }),
   select: (id: string | null) => set({ selected: id }),

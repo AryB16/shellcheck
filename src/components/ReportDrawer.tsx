@@ -6,26 +6,26 @@ import { controls, useSim } from '../sim/store'
 import { T5 } from '../sim/timeline'
 
 export function ReportDrawer() {
-  const open = useSim((s) => s.step === 5)
+  const open = useSim((s) => s.step === 5 && !s.reportHidden)
   return (
     <AnimatePresence>
       {open && (
         <motion.div
           key="drawer"
-          className="absolute inset-0 z-20 flex items-stretch justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 p-0 md:p-4 lg:absolute lg:z-20 lg:bg-black/50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="flex w-full max-w-[52rem] flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-[0_24px_60px_rgba(0,0,0,0.5)]"
+            className="flex w-full max-w-[52rem] flex-col overflow-hidden border-line bg-card md:rounded-2xl md:border shadow-[0_24px_60px_rgba(0,0,0,0.5)]"
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 24, opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Report />
+            <Report onClose={controls.hideReport} />
           </motion.div>
         </motion.div>
       )}
@@ -33,7 +33,7 @@ export function ReportDrawer() {
   )
 }
 
-function Report() {
+function Report({ onClose }: { onClose: () => void }) {
   const cur = useSim((s) => s.currency)
   const blocks = useMemo(() => buildReport(cur), [cur])
   const total = reportCost(blocks)
@@ -53,21 +53,31 @@ function Report() {
   let left = units
   return (
     <>
-      <div className="flex shrink-0 items-start justify-between border-b border-line px-7 py-5">
+      <div className="flex shrink-0 items-start gap-3 border-b border-line px-5 py-4 md:px-7 md:py-5">
         <div>
           <div className="text-[0.8rem] font-medium text-tx3">Draft for COAF · Brazil’s financial-intelligence unit</div>
           <h2 className="mt-0.5 text-[1.4rem] font-semibold tracking-[-0.01em] text-ink">Suspicious activity report</h2>
         </div>
         <span
-          className={`rounded-full px-3 py-1 text-[0.8rem] font-semibold ${
+          className={`ml-auto shrink-0 rounded-full px-3 py-1 text-[0.8rem] font-semibold ${
             filedAt != null ? 'bg-ink text-bg' : done ? 'bg-risksoft text-risk' : 'bg-soft text-tx2'
           }`}
         >
           {filedAt != null ? 'Filed' : done ? 'Needs your decision' : 'Writing…'}
         </span>
+        <button
+          onClick={(ev) => {
+            ev.currentTarget.blur()
+            onClose()
+          }}
+          aria-label="Close report"
+          className="-mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[1.1rem] text-tx3 hover:bg-soft hover:text-ink"
+        >
+          ✕
+        </button>
       </div>
 
-      <div ref={scroller} className="scroll-thin min-h-0 flex-1 overflow-y-auto px-7 py-5">
+      <div ref={scroller} className="scroll-thin min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-7">
         {blocks.map((b, i) => {
           if (left <= 0) return null
           const cost = blockCost(b)
@@ -157,15 +167,15 @@ function BlockView({ b, shown, writing }: { b: Block; shown: number; writing: bo
 
 function Decision({ done, filedAt }: { done: boolean; filedAt: number | null }) {
   return (
-    <div className={`shrink-0 border-t px-7 py-4 transition-colors ${done && filedAt == null ? 'border-risk/30 bg-risksoft/60' : 'border-line bg-soft'}`}>
+    <div className={`shrink-0 border-t px-5 py-4 transition-colors md:px-7 ${done && filedAt == null ? 'border-risk/30 bg-risksoft/60' : 'border-line bg-soft'}`}>
       <AnimatePresence mode="wait" initial={false}>
         {filedAt == null ? (
-          <motion.div key="ask" exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex items-center justify-between gap-6">
+          <motion.div key="ask" exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
             <div>
               <div className={`text-[1rem] font-semibold ${done ? 'text-risk' : 'text-tx3'}`}>Analyst decision required</div>
               <div className="text-[0.88rem] text-tx2">ShellCheck drafts. Only a person can file.</div>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 gap-2 [&>button]:flex-1 md:[&>button]:flex-none">
               <button disabled={!done} className="h-11 rounded-lg border border-line2 bg-card px-4 text-[0.92rem] text-tx2 disabled:opacity-40">
                 Send back
               </button>

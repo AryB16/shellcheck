@@ -24,8 +24,8 @@ export function KickoffSparkline({ id }: { id: string }) {
   return (
     <svg viewBox={`0 0 ${Wd} ${Hd + 16}`} className="block h-auto w-full">
       <line x1={0} y1={Hd} x2={Wd} y2={Hd} stroke="#2C3036" />
-      <path d={area} fill="#F0A92E" fillOpacity={0.14} />
-      <path d={d} fill="none" stroke="#F0A92E" strokeWidth={1.4} />
+      <path d={area} fill="#FFB020" fillOpacity={0.16} />
+      <path d={d} fill="none" stroke="#FFB020" strokeWidth={1.4} />
       {KICKOFFS.map((k) => {
         const kx = (k.idx / SERIES_MIN) * Wd
         return <line key={k.idx} x1={kx} y1={0} x2={kx} y2={Hd} stroke="#ECEAE6" strokeOpacity={0.3} strokeDasharray="2 3" />

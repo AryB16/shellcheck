@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EV_BIZ, EV_TIME, eventsUpTo } from '../data/feed'
 import { BUSINESSES, RING_ORDER, SHARED_ADDRESS, SHARED_PHONE } from '../data/model'
 import { ADDR_ID, H, PHONE_ID, POS_A, POS_B, W, type Pt } from '../data/layout'
@@ -16,10 +16,10 @@ RING_ORDER.forEach((id, k) => {
 
 const UNMASK_AT = T4.partner0
 const MAX_HOUR = 38_600
-const RED = '#EF4B43'
-const BLUE = '#7BA6F0'
-const TEXT = '#ECEAE6'
-const CANVAS = '#181A1E'
+const RED = '#FF5A4E'
+const BLUE = '#5B9DFF'
+const TEXT = '#F2F3F5'
+const CANVAS = '#12151B'
 const RIPPLE_SEC = 1.1
 
 const radius = (hour: number) => 8 + Math.sqrt(hour / MAX_HOUR) * 30
@@ -48,6 +48,22 @@ export function NetworkGraph() {
   const cur = useSim((s) => s.currency)
   const [hover, setHover] = useState<string | null>(null)
 
+  // Keep labels readable on small screens: scale SVG text up as the canvas shrinks.
+  const box = useRef<HTMLDivElement>(null)
+  const [k, setK] = useState(1)
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      const px = Math.min(width / W, height / H) // screen px per SVG unit
+      setK(Math.min(2, Math.max(1, 11.5 / (16.5 * px))))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const narrow = k > 1.25
+
   const t = moveT(step, e)
   const unmasked = step > 4 || (step === 4 && e >= UNMASK_AT)
   const hubScale = step < 4 ? 0 : step > 4 ? 1 : easeOut((e - T4.hubIn) / 320)
@@ -59,6 +75,12 @@ export function NetworkGraph() {
   const ripples = []
   for (let i = Math.max(lo, hi - 40); i < hi; i++) ripples.push({ i, b: BUSINESSES[EV_BIZ[i]], age: (sim - EV_TIME[i]) / RIPPLE_SEC })
 
+  // Phones: zoom towards the network as it forms so it fills the screen.
+  const zoom = narrow ? t : 0
+  const crop = { x: HULL.cx - HULL_RX - 120, y: HULL.cy - HULL_RY - 250, w: (HULL_RX + 120) * 2, h: HULL_RY * 2 + 250 + 90 }
+  const vb = { x: lerp(0, crop.x, zoom), y: lerp(0, crop.y, zoom), w: lerp(W, crop.w, zoom), h: lerp(H, crop.h, zoom) }
+  const viewBox = `${vb.x} ${vb.y} ${vb.w} ${vb.h}`
+
   const nodes = BUSINESSES.map((b) => {
     const score = Math.round(scoreOf(b, step, e))
     return { b, p: posOf(b.id, t), score, bd: band(score), r: radius(hourOf(b, step, e)), dim: !b.ring ? 1 - 0.65 * t : 1 }
@@ -66,13 +88,13 @@ export function NetworkGraph() {
   const byId = Object.fromEntries(nodes.map((n) => [n.b.id, n]))
 
   return (
-    <div className="dotgrid absolute inset-0">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full">
+    <div ref={box} className="dotgrid absolute inset-0">
+      <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full">
         {/* Network outline */}
         {hullT > 0 && (
           <g opacity={hullT}>
             <ellipse cx={HULL.cx} cy={HULL.cy} rx={HULL_RX * lerp(0.9, 1, hullT)} ry={HULL_RY * lerp(0.9, 1, hullT)} fill={RED} fillOpacity={0.035} stroke={RED} strokeOpacity={0.45} strokeWidth={1.5} strokeDasharray="7 7" />
-            <text x={HULL.cx} y={HULL.cy - HULL_RY - 10} textAnchor="middle" fontSize={13} fontWeight={600} letterSpacing="0.08em" fill={RED} fontFamily="IBM Plex Sans">
+            <text x={HULL.cx} y={HULL.cy - HULL_RY - 10} textAnchor="middle" fontSize={13 * k} fontWeight={600} letterSpacing="0.08em" fill={RED} fontFamily="IBM Plex Sans">
               NETWORK SP-0412
             </text>
           </g>
@@ -135,7 +157,7 @@ export function NetworkGraph() {
               style={{ cursor: 'pointer' }}
             >
               <circle r={r + 16} fill="transparent" />
-              <circle r={r} fill={c} fillOpacity={bd === 'low' ? 0.16 : 0.9} stroke={c} strokeWidth={bd === 'low' ? 1.5 : 0} style={{ transition: 'fill 350ms, stroke 350ms' }} />
+              <circle r={r} fill={c} fillOpacity={bd === 'low' ? 0.22 : 0.95} stroke={c} strokeWidth={bd === 'low' ? 1.5 : 0} style={{ transition: 'fill 350ms, stroke 350ms' }} />
               {bd === 'low' && <circle r={2.5} fill={c} />}
               {isSel && <circle r={r + 11} fill="none" stroke={TEXT} strokeWidth={1.5} strokeDasharray="3 4" />}
             </g>
@@ -145,17 +167,30 @@ export function NetworkGraph() {
         {/* Hub labels */}
         {hubScale > 0 &&
           [
-            { id: PHONE_ID, k: 'Same phone number', v: SHARED_PHONE },
-            { id: ADDR_ID, k: 'Same address', v: SHARED_ADDRESS.split(' – ')[0] },
-          ].map(({ id, k, v }) => {
+            { id: PHONE_ID, title: 'Same phone number', v: SHARED_PHONE },
+            { id: ADDR_ID, title: 'Same address', v: SHARED_ADDRESS.split(' – ')[0] },
+          ].map(({ id, title, v }) => {
             const p = POS_B[id]
-            const w = Math.max(v.length * 8.4, (k.length + (unmasked ? 15 : 0)) * 7.4) + 24
+            if (narrow) {
+              const tag = `${id === PHONE_ID ? 'PHONE' : 'ADDRESS'}${unmasked ? ' · 7' : ''}`
+              const tw = tag.length * 8 + 16
+              const tx = id === PHONE_ID ? -24 - tw : 24
+              return (
+                <g key={id} transform={`translate(${p.x},${p.y}) scale(${k})`} opacity={hubScale}>
+                  <rect x={tx} y={-12} width={tw} height={24} rx={6} fill="#161B24" stroke={BLUE} strokeOpacity={0.7} />
+                  <text x={tx + tw / 2} y={4.5} textAnchor="middle" fontSize={12} fontWeight={600} fill={unmasked ? RED : BLUE} fontFamily="IBM Plex Sans" letterSpacing="0.05em">
+                    {tag}
+                  </text>
+                </g>
+              )
+            }
+            const w = Math.max(v.length * 8.4, (title.length + (unmasked ? 15 : 0)) * 7.4) + 24
             const x0 = id === PHONE_ID ? -28 - w : 28
             return (
               <g key={id} transform={`translate(${p.x},${p.y - 24})`} opacity={hubScale}>
-                <rect x={x0} y={0} width={w} height={48} rx={7} fill="#1F2329" stroke={BLUE} strokeOpacity={0.55} strokeWidth={1.2} />
+                <rect x={x0} y={0} width={w} height={48} rx={7} fill="#161B24" stroke={BLUE} strokeOpacity={0.7} strokeWidth={1.2} />
                 <text x={x0 + 12} y={19} fontSize={12.5} fill={BLUE} fontFamily="IBM Plex Sans" fontWeight={600}>
-                  {k}
+                  {title}
                   {unmasked && <tspan fill={RED}> · 7 businesses</tspan>}
                 </text>
                 <text x={x0 + 12} y={38} fontSize={15} fill={TEXT} fontFamily="IBM Plex Sans" fontWeight={500}>
@@ -173,9 +208,13 @@ export function NetworkGraph() {
           // During the unmasking, only the ring keeps its labels.
           if (!b.ring && t > 0.3 && !isSel && !isHover) return null
           if (!flagged && !isSel && !isHover) return null
-          const tw = b.short.length * 9.2
+          const two = b.short.split(' ').slice(0, 2).join(' ')
+          const name = !narrow ? b.short : two.length > 13 && b.id !== 'luacheia' ? two.split(' ')[0] : two
+          const tw = name.length * 9.2
+          const half = ((tw + (flagged ? 40 : 0)) / 2) * k + 6
+          const lx = Math.min(vb.x + vb.w - half, Math.max(vb.x + half, p.x))
           return (
-            <g key={b.id} transform={`translate(${p.x},${p.y + r + 26})`} opacity={isHover || isSel ? 1 : dim} pointerEvents="none">
+            <g key={b.id} transform={`translate(${lx},${p.y + r + 26 * k}) scale(${k})`} opacity={isHover || isSel ? 1 : dim} pointerEvents="none">
               <text
                 textAnchor="middle"
                 x={flagged ? -22 : 0}
@@ -187,7 +226,7 @@ export function NetworkGraph() {
                 strokeWidth={5}
                 paintOrder="stroke"
               >
-                {b.short}
+                {name}
               </text>
               {flagged && (
                 <g transform={`translate(${tw / 2 - 14},-15)`}>
@@ -206,15 +245,16 @@ export function NetworkGraph() {
           )
         })}
       </svg>
+      <div className="vignette pointer-events-none absolute inset-0" />
 
-      <div className="pointer-events-none absolute left-5 top-4">
+      <div className="pointer-events-none absolute left-4 top-4 md:left-5">
         <div className="text-[1rem] font-semibold text-ink">Business network</div>
-        <div className="text-[0.8rem] text-tx3">Each ripple is a Pix payment arriving · bigger circle = more money in the last hour</div>
+        <div className="hidden text-[0.8rem] text-tx3 md:block">Each ripple is a Pix payment arriving · bigger circle = more money in the last hour</div>
       </div>
       <KickoffChip step={step} e={e} />
       <NetworkReadout step={step} e={e} cur={cur} />
       <Legend />
-      <div className="pointer-events-none absolute bottom-4 right-5 max-w-[46%] text-right text-[0.7rem] leading-snug text-tx4">
+      <div className="pointer-events-none absolute bottom-4 right-5 hidden max-w-[46%] text-right lg:block text-[0.7rem] leading-snug text-tx4">
         Source: company fields and CNAE codes follow Receita Federal CNPJ open data; payments follow the Banco Central Pix format. Accounts are simulated.
       </div>
     </div>
@@ -234,10 +274,10 @@ function KickoffChip({ step, e }: { step: Step; e: number }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className={`absolute right-4 top-4 flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 ${live ? 'border-money/40 bg-moneysoft' : 'border-line2 bg-card'}`}
+          className={`absolute right-3 top-3.5 flex items-center gap-2 rounded-full border px-3 py-1.5 md:right-4 md:top-4 md:gap-2.5 md:px-3.5 ${live ? 'border-money/40 bg-moneysoft' : 'border-line2 bg-card'}`}
         >
           <span className={`h-2 w-2 rounded-full ${live ? 'livedot bg-money' : 'bg-tx4'}`} />
-          <span className={`text-[0.9rem] font-semibold ${live ? 'text-moneyink' : 'text-tx2'}`}>{live ? 'Kick-off · 5 matches live' : `Kick-off in ${left}s`}</span>
+          <span className={`text-[0.9rem] font-semibold ${live ? 'text-moneyink' : 'text-tx2'}`}>{live ? <>Kick-off<span className="hidden md:inline"> · 5 matches live</span></> : `Kick-off in ${left}s`}</span>
         </motion.div>
       )}
     </AnimatePresence>
@@ -256,7 +296,7 @@ function NetworkReadout({ step, e, cur }: { step: Step; e: number; cur: Cur }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute left-5 top-[4.4rem] flex overflow-hidden rounded-xl border border-risk/40 bg-card"
+          className="absolute left-4 top-[3.2rem] flex overflow-hidden rounded-xl md:left-5 md:top-[4.4rem] border border-risk/40 bg-card"
         >
           <Stat v={String(n)} k={n === 1 ? 'business' : 'businesses'} c="text-risk" />
           <Stat v={n ? '1' : '0'} k="phone" c="text-link" />
@@ -269,8 +309,8 @@ function NetworkReadout({ step, e, cur }: { step: Step; e: number; cur: Cur }) {
 }
 
 const Stat = ({ v, k, c }: { v: string; k: string; c: string }) => (
-  <div className="border-r border-line px-4 py-2 last:border-r-0">
-    <div className={`text-[1.5rem] font-semibold leading-none ${c}`}>{v}</div>
+  <div className="border-r border-line px-3 py-1.5 last:border-r-0 md:px-4 md:py-2">
+    <div className={`text-[1.15rem] font-semibold leading-none md:text-[1.5rem] ${c}`}>{v}</div>
     <div className="mt-1 text-[0.76rem] text-tx3">{k}</div>
   </div>
 )
@@ -280,11 +320,11 @@ function Legend() {
     <i className="h-2.5 w-2.5 rounded-full" style={hollow ? { border: `1.5px solid ${c}`, background: `${c}33` } : { background: c }} />
   )
   return (
-    <div className="pointer-events-none absolute bottom-3.5 left-5 flex items-center gap-4 rounded-full border border-line bg-card/90 px-3.5 py-1.5 text-[0.78rem] text-tx2">
-      <span className="flex items-center gap-1.5"><Dot c="#5DB08F" hollow /> Normal</span>
-      <span className="flex items-center gap-1.5"><Dot c="#F0A92E" /> Unusual</span>
-      <span className="flex items-center gap-1.5"><Dot c="#EF4B43" /> High risk</span>
-      <span className="flex items-center gap-1.5">
+    <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-3 rounded-full md:bottom-3.5 md:left-5 md:gap-4 border border-line bg-card/90 px-3.5 py-1.5 text-[0.78rem] text-tx2">
+      <span className="flex items-center gap-1.5"><Dot c="#3DD68C" hollow /> Normal</span>
+      <span className="flex items-center gap-1.5"><Dot c="#FFB020" /> Unusual</span>
+      <span className="flex items-center gap-1.5"><Dot c="#FF5A4E" /> High risk</span>
+      <span className="hidden items-center gap-1.5 md:flex">
         <i className="h-2.5 w-2.5 rotate-45 rounded-[2px] border-[1.5px] border-link" /> Registry record
       </span>
     </div>

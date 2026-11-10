@@ -4,25 +4,33 @@
 
 :root { color-scheme: dark; }
 html { font-size: 16px; }
+@media (max-width: 1099px) { html { font-size: 15px; } }
 @media (max-width: 1600px), (max-height: 900px) { html { font-size: 13.5px; } }
 
-html, body, #root { height: 100%; }
+html, body, #root { min-height: 100%; }
+@media (min-width: 1100px) { html, body, #root { height: 100%; } }
 body {
   margin: 0;
-  background: #141619;
-  color: #ECEAE6;
+  background: #0E1015;
+  color: #F2F3F5;
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden;
+  overflow: auto;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
+@media (min-width: 1100px) { body { overflow: hidden; } }
+
+/* Soft edge falloff on the graph canvas: depth without glow */
+.vignette { background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.28) 100%); }
+
 .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 
 .card {
-  background: #1C1F23;
-  border: 1px solid #2C3036;
+  background: #161920;
+  border: 1px solid #252A34;
   border-radius: 12px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.025) inset, 0 6px 18px rgba(0, 0, 0, 0.25);
 }
@@ -34,8 +42,8 @@ body {
   color: #878C94;
 }
 .dotgrid {
-  background-color: #181A1E;
-  background-image: radial-gradient(#2A2E34 1px, transparent 1px);
+  background-color: #12151B;
+  background-image: radial-gradient(#232833 1px, transparent 1px);
   background-size: 22px 22px;
 }
 

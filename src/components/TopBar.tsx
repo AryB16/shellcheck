@@ -24,49 +24,66 @@ export function TopBar() {
   const [nFlag, amt] = flagged.split('|').map(Number)
 
   return (
-    <header className="flex h-[3.9rem] shrink-0 items-center gap-6 border-b border-line bg-card px-5">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-ink">
-            <span className="h-2.5 w-2.5 rounded-[2px] bg-risk" />
-          </span>
-          <span className="text-[1.3rem] font-semibold tracking-[-0.02em] text-ink">ShellCheck</span>
+    <header className="sticky top-0 z-30 shrink-0 border-b border-line bg-card/95 backdrop-blur lg:static">
+      <div className="flex h-14 items-center gap-3 px-3 md:gap-5 md:px-5 lg:h-[3.9rem]">
+        <div className="flex items-center gap-2.5">
+          <Logo />
+          <span className="text-[1.25rem] font-semibold tracking-[-0.025em] text-ink">ShellCheck</span>
         </div>
-        <span className="h-6 w-px bg-line" />
-        <div className="leading-tight">
-          <div className="text-[0.92rem] font-medium text-ink">Banco Exemplo S.A.</div>
-          <div className="text-[0.76rem] text-tx3">Compliance</div>
+        <span className="hidden h-6 w-px bg-line md:block" />
+        <div className="hidden leading-tight md:block">
+          <div className="text-[0.9rem] font-medium text-ink">Banco Exemplo S.A.</div>
+          <div className="text-[0.74rem] text-tx3">Financial crime compliance</div>
         </div>
-      </div>
 
-      <div className="ml-auto flex items-center gap-7">
-        <Kpi
-          label="Businesses flagged"
-          value={<AnimatedNumber value={nFlag} format={int} duration={0.4} />}
-          tone={nFlag > 0 ? 'text-risk' : undefined}
-        />
-        <Kpi
-          label="Money under review"
-          value={<AnimatedNumber value={amt} format={(v) => (v < 1 ? moneyShort(0, cur) : moneyShort(v, cur))} />}
-          tone={amt > 0 ? 'text-moneyink' : undefined}
-        />
-        <span className="h-8 w-px bg-line" />
-        <CurrencyToggle cur={cur} />
-        <div className="flex items-center gap-2.5 rounded-lg border border-line bg-soft px-3 py-1.5">
-          <span className={`h-2 w-2 rounded-full ${playing ? 'livedot bg-ok' : 'bg-tx4'}`} />
-          <div className="leading-tight">
-            <div className="text-[0.95rem] font-medium text-ink">Sat 14 Nov · <span className="mono">{clock(sec)}</span></div>
-            <div className="text-[0.7rem] text-tx3">{playing ? 'Live simulation' : 'Paused — press Space'}</div>
+        <div className="ml-auto flex items-center gap-3 md:gap-6">
+          <div className="hidden items-center gap-6 md:flex">
+            <Kpi label="Businesses flagged" value={<AnimatedNumber value={nFlag} format={int} duration={0.4} />} tone={nFlag > 0 ? 'text-risk' : undefined} />
+            <Kpi
+              label="Money under review"
+              value={<AnimatedNumber value={amt} format={(v) => moneyShort(v < 1 ? 0 : v, cur)} />}
+              tone={amt > 0 ? 'text-moneyink' : undefined}
+            />
+            <span className="h-8 w-px bg-line" />
+          </div>
+          <CurrencyToggle cur={cur} />
+          <div className="flex items-center gap-2 rounded-lg border border-line bg-soft px-2.5 py-1.5 md:gap-2.5 md:px-3">
+            <span className={`h-2 w-2 rounded-full ${playing ? 'livedot bg-ok' : 'bg-tx4'}`} />
+            <div className="leading-tight">
+              <div className="text-[0.92rem] font-medium text-ink">
+                <span className="hidden md:inline">Sat 14 Nov · </span>
+                <span className="mono">{clock(sec)}</span>
+              </div>
+              <div className="hidden text-[0.7rem] text-tx3 md:block">{playing ? 'Live simulation' : 'Paused — press Space'}</div>
+            </div>
           </div>
         </div>
+      </div>
+      {/* Phone: KPIs on their own row */}
+      <div className="flex items-center justify-between gap-4 border-t border-line px-3 py-2 md:hidden">
+        <Kpi label="Businesses flagged" value={<AnimatedNumber value={nFlag} format={int} duration={0.4} />} tone={nFlag > 0 ? 'text-risk' : undefined} left />
+        <Kpi label="Money under review" value={<AnimatedNumber value={amt} format={(v) => moneyShort(v < 1 ? 0 : v, cur)} />} tone={amt > 0 ? 'text-moneyink' : undefined} />
       </div>
     </header>
   )
 }
 
-function Kpi({ label, value, tone }: { label: string; value: React.ReactNode; tone?: string }) {
+/** Wordmark glyph: a ledger square with one entry flagged. */
+function Logo() {
   return (
-    <div className="text-right leading-tight">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden>
+      <rect x="0.5" y="0.5" width="27" height="27" rx="7" fill="#1E222B" stroke="#353B47" />
+      <rect x="7" y="8" width="14" height="2" rx="1" fill="#878C94" />
+      <rect x="7" y="13" width="9" height="2" rx="1" fill="#FF5A4E" />
+      <rect x="7" y="18" width="12" height="2" rx="1" fill="#878C94" />
+      <circle cx="20" cy="14" r="2" fill="#FF5A4E" />
+    </svg>
+  )
+}
+
+function Kpi({ label, value, tone, left }: { label: string; value: React.ReactNode; tone?: string; left?: boolean }) {
+  return (
+    <div className={`leading-tight ${left ? 'text-left' : 'text-right'}`}>
       <div className="text-[0.74rem] text-tx3">{label}</div>
       <div className={`text-[1.3rem] font-semibold ${tone ?? 'text-ink'}`}>{value}</div>
     </div>
@@ -87,7 +104,7 @@ function CurrencyToggle({ cur }: { cur: Cur }) {
             cur === c ? 'bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.4)]' : 'text-tx3 hover:text-ink'
           }`}
         >
-          {c === 'BRL' ? 'R$ BRL' : '$ USD'}
+          {c}
         </button>
       ))}
     </div>
